@@ -1,1 +1,108 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+@use 'styles/variables';
+@use 'styles/mixins';
+
+// Light theme
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$violet-palette,
+    ),
+    typography: Inter,
+    density: 0,
+  ));
+}
+
+// Dark theme
+html.dark-theme {
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$azure-palette,
+      tertiary: mat.$violet-palette,
+    ),
+    typography: Inter,
+    density: 0,
+  ));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--tm-bg-primary);
+  color: var(--tm-text-primary);
+  transition: background-color var(--tm-transition), color var(--tm-transition);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Scrollbar styling
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tm-border);
+  border-radius: 3px;
+
+  &:hover {
+    background: var(--tm-text-muted);
+  }
+}
+
+// Snackbar custom styles
+.snackbar-success .mdc-snackbar__surface {
+  background: #059669 !important;
+}
+
+.snackbar-error .mdc-snackbar__surface {
+  background: #dc2626 !important;
+}
+
+.snackbar-info .mdc-snackbar__surface {
+  background: #2563eb !important;
+}
+
+.snackbar-warn .mdc-snackbar__surface {
+  background: #d97706 !important;
+}
+
+// Global link styling
+a {
+  color: var(--tm-accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Reduce motion for accessibility
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
