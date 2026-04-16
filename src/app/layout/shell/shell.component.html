@@ -1,0 +1,26 @@
+@if (uiStore.isMobile()) {
+  <!-- Mobile layout: sidebar overlays as backdrop panel -->
+  <div class="main-area">
+    <app-header />
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+
+  @if (!uiStore.sidebarCollapsed()) {
+    <div class="mobile-backdrop" (click)="uiStore.toggleSidebar()"></div>
+    <aside class="mobile-sidebar">
+      <app-sidebar [collapsed]="false" />
+    </aside>
+  }
+} @else {
+  <!-- Desktop layout: CSS Grid with sidebar left, header+main right -->
+  <app-sidebar [collapsed]="uiStore.sidebarCollapsed()" />
+
+  <div class="main-area">
+    <app-header />
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+}

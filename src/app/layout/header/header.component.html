@@ -1,0 +1,50 @@
+<mat-toolbar>
+  <!-- Left: Hamburger menu toggle -->
+  <button mat-icon-button
+          matTooltip="Toggle sidebar"
+          (click)="uiStore.toggleSidebar()">
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <!-- Center: Search bar trigger -->
+  <div class="search-trigger" (click)="uiStore.toggleCommandPalette()">
+    <mat-icon>search</mat-icon>
+    <span>Search tasks...</span>
+    <kbd>Ctrl+K</kbd>
+  </div>
+
+  <span class="spacer"></span>
+
+  <!-- Right: Header actions -->
+  <div class="header-actions">
+    <!-- Theme toggle -->
+    <button mat-icon-button
+            matTooltip="Toggle theme"
+            (click)="themeService.toggleTheme()">
+      <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+
+    <!-- User avatar with menu -->
+    <div class="avatar"
+         [matMenuTriggerFor]="userMenu"
+         matTooltip="Account">
+      {{ authStore.userInitials() }}
+    </div>
+
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item (click)="navigateTo('/profile')">
+        <mat-icon>person</mat-icon>
+        <span>Profile</span>
+      </button>
+      <button mat-menu-item (click)="navigateTo('/settings')">
+        <mat-icon>settings</mat-icon>
+        <span>Settings</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="onLogout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </div>
+</mat-toolbar>

@@ -1,0 +1,56 @@
+<!-- Brand / Logo area -->
+<div class="brand">
+  <mat-icon class="brand-icon">check_circle</mat-icon>
+  @if (!collapsed()) {
+    <span class="brand-name">TaskFlow</span>
+  }
+</div>
+
+<!-- Navigation list -->
+<ul class="nav-list">
+  @for (item of navItems; track item.path) {
+    <li>
+      <a class="nav-item"
+         [routerLink]="item.path"
+         routerLinkActive="active"
+         [matTooltip]="collapsed() ? item.label : ''"
+         matTooltipPosition="right">
+        <mat-icon>{{ item.icon }}</mat-icon>
+        @if (!collapsed()) {
+          <span>{{ item.label }}</span>
+        }
+      </a>
+    </li>
+  }
+</ul>
+
+<!-- Divider -->
+<div class="divider"></div>
+
+<!-- Projects section -->
+@if (!collapsed()) {
+  <div class="section-label">Projects</div>
+
+  @for (project of projectStore.projectsWithStats(); track project.id) {
+    <a class="project-item"
+       [routerLink]="'/projects/' + project.id"
+       routerLinkActive="active">
+      <span class="dot" [style.background]="project.color"></span>
+      <span class="project-name">{{ project.name }}</span>
+      <span class="task-count">{{ project.taskCount }}</span>
+    </a>
+  }
+} @else {
+  <div class="section-label" style="text-align: center;">...</div>
+
+  @for (project of projectStore.projectsWithStats(); track project.id) {
+    <a class="project-item"
+       [routerLink]="'/projects/' + project.id"
+       routerLinkActive="active"
+       [matTooltip]="project.name + ' (' + project.taskCount + ')'"
+       matTooltipPosition="right"
+       style="justify-content: center;">
+      <span class="dot" [style.background]="project.color"></span>
+    </a>
+  }
+}
