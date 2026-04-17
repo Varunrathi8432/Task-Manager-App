@@ -1,0 +1,127 @@
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 16px;
+}
+
+.auth-card {
+  background: var(--tm-bg-card);
+  border-radius: var(--tm-radius-lg);
+  box-shadow: var(--tm-shadow-lg);
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 32px;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: var(--tm-accent);
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 8px 0 4px;
+    color: var(--tm-text-primary);
+  }
+
+  p {
+    color: var(--tm-text-secondary);
+    margin: 0;
+  }
+}
+
+.form-heading {
+  text-align: center;
+  margin-bottom: 24px;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: var(--tm-text-primary);
+  }
+
+  p {
+    color: var(--tm-text-secondary);
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  margin-top: 8px;
+}
+
+.error-alert {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--tm-radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: #dc2626;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dark-theme .error-alert {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.auth-footer {
+  text-align: center;
+  color: var(--tm-text-secondary);
+  font-size: 14px;
+
+  a {
+    color: var(--tm-accent);
+    font-weight: 500;
+  }
+}
+
+.strength-bar {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+
+  .segment {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--tm-border);
+    transition: background var(--tm-transition);
+
+    &.active-1 { background: #ef4444; }
+    &.active-2 { background: #f59e0b; }
+    &.active-3 { background: #22c55e; }
+    &.active-4 { background: #059669; }
+  }
+}
+
+.strength-label {
+  font-size: 12px;
+  margin-bottom: 12px;
+}
