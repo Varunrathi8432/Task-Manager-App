@@ -1,0 +1,10 @@
+@for (item of [].constructor(count()); track $index) {
+  <div
+    class="skeleton"
+    [class.skeleton-text]="variant() === 'text'"
+    [class.skeleton-card]="variant() === 'card'"
+    [class.skeleton-circle]="variant() === 'circle'"
+    [style.width]="variant() === 'circle' ? height() : width()"
+    [style.height]="height()">
+  </div>
+}

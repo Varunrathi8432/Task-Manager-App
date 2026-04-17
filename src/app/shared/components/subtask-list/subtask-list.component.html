@@ -1,0 +1,49 @@
+<div class="subtask-list">
+  <div class="subtask-progress">
+    <div class="subtask-progress-header">
+      <span class="subtask-progress-label">Progress</span>
+      <span class="subtask-progress-value">{{ progress() }}%</span>
+    </div>
+    <mat-progress-bar
+      mode="determinate"
+      [value]="progress()">
+    </mat-progress-bar>
+  </div>
+
+  <div class="subtask-items">
+    @for (subtask of subtasks(); track subtask.id) {
+      <div class="subtask-item" [class.subtask-completed]="subtask.completed">
+        <mat-checkbox
+          [checked]="subtask.completed"
+          (change)="onToggle(subtask.id)">
+          <span class="subtask-title">{{ subtask.title }}</span>
+        </mat-checkbox>
+        <button
+          mat-icon-button
+          class="subtask-remove-btn"
+          (click)="onRemove(subtask.id)"
+          aria-label="Remove subtask">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="subtask-add">
+    <input
+      type="text"
+      class="subtask-input"
+      placeholder="Add a subtask..."
+      [value]="newSubtaskTitle()"
+      (input)="newSubtaskTitle.set($any($event.target).value)"
+      (keyup.enter)="onAdd()" />
+    <button
+      mat-icon-button
+      color="primary"
+      (click)="onAdd()"
+      [disabled]="!newSubtaskTitle().trim()"
+      aria-label="Add subtask">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,41 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.chip-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+}
+
+.chip-label {
+  line-height: 1;
+}
+
+.chip-todo {
+  background-color: var(--status-todo-bg, #e0e0e0);
+  color: var(--status-todo-text, #616161);
+}
+
+.chip-in-progress {
+  background-color: var(--status-in-progress-bg, #e3f2fd);
+  color: var(--status-in-progress-text, #1565c0);
+}
+
+.chip-review {
+  background-color: var(--status-review-bg, #f3e5f5);
+  color: var(--status-review-text, #7b1fa2);
+}
+
+.chip-done {
+  background-color: var(--status-done-bg, #e8f5e9);
+  color: var(--status-done-text, #2e7d32);
+}
