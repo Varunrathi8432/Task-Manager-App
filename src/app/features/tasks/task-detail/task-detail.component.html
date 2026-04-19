@@ -1,0 +1,182 @@
+<div class="task-detail-container">
+  <!-- Back Button -->
+  <button mat-button class="back-button" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    Back to Tasks
+  </button>
+
+  @if (task(); as task) {
+    <!-- Header Section -->
+    <div class="detail-header">
+      <div class="header-title-row">
+        <h1 class="task-title">{{ task.title }}</h1>
+        <div class="header-actions">
+          <button mat-stroked-button (click)="onEdit()" matTooltip="Edit task">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <button mat-stroked-button color="warn" (click)="onDelete()" matTooltip="Delete task">
+            <mat-icon>delete</mat-icon>
+            Delete
+          </button>
+        </div>
+      </div>
+      <div class="header-badges">
+        <app-priority-badge [priority]="task.priority"></app-priority-badge>
+        <app-status-chip [status]="task.status"></app-status-chip>
+      </div>
+    </div>
+
+    <!-- Two-column Layout -->
+    <div class="detail-content">
+      <!-- Main Column -->
+      <div class="main-column">
+        <!-- Description -->
+        <section class="detail-section">
+          <h3 class="section-title">
+            <mat-icon>description</mat-icon>
+            Description
+          </h3>
+          @if (task.description) {
+            <p class="description-text">{{ task.description }}</p>
+          } @else {
+            <p class="no-content">No description provided.</p>
+          }
+        </section>
+
+        <!-- Subtasks -->
+        <section class="detail-section">
+          <h3 class="section-title">
+            <mat-icon>checklist</mat-icon>
+            Subtasks
+            @if (subtaskProgress(); as progress) {
+              <span class="subtask-count">({{ progress.completed }}/{{ progress.total }})</span>
+            }
+          </h3>
+          <app-subtask-list
+            [subtasks]="task.subtasks"
+            [taskId]="task.id"
+            (toggle)="onSubtaskToggle($event)"
+            (add)="onSubtaskAdd($event)"
+            (remove)="onSubtaskRemove($event)">
+          </app-subtask-list>
+        </section>
+
+        <!-- Activity Log -->
+        <section class="detail-section">
+          <h3 class="section-title">
+            <mat-icon>history</mat-icon>
+            Activity
+          </h3>
+          @if (task.activityLog.length > 0) {
+            <div class="activity-timeline">
+              @for (entry of task.activityLog; track entry.id) {
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-action">{{ entry.action }}</div>
+                    <div class="timeline-details">{{ entry.details }}</div>
+                    <div class="timeline-date">{{ entry.timestamp | relativeDate }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-content">No activity recorded yet.</p>
+          }
+        </section>
+      </div>
+
+      <!-- Sidebar Column -->
+      <aside class="sidebar-column">
+        <!-- Status -->
+        <div class="sidebar-field">
+          <label class="sidebar-label">Status</label>
+          <mat-select
+            [value]="task.status"
+            (selectionChange)="onStatusChange($event.value)"
+            class="sidebar-select">
+            <mat-option value="todo">To Do</mat-option>
+            <mat-option value="in-progress">In Progress</mat-option>
+            <mat-option value="review">Review</mat-option>
+            <mat-option value="done">Done</mat-option>
+          </mat-select>
+        </div>
+
+        <!-- Priority -->
+        <div class="sidebar-field">
+          <label class="sidebar-label">Priority</label>
+          <mat-select
+            [value]="task.priority"
+            (selectionChange)="onPriorityChange($event.value)"
+            class="sidebar-select">
+            <mat-option value="low">Low</mat-option>
+            <mat-option value="medium">Medium</mat-option>
+            <mat-option value="high">High</mat-option>
+            <mat-option value="critical">Critical</mat-option>
+          </mat-select>
+        </div>
+
+        <!-- Due Date -->
+        <div class="sidebar-field">
+          <label class="sidebar-label">Due Date</label>
+          <span class="sidebar-value">{{ formatDate(task.dueDate) }}</span>
+        </div>
+
+        <!-- Project -->
+        <div class="sidebar-field">
+          <label class="sidebar-label">Project</label>
+          @if (projectName(); as name) {
+            <div class="project-info">
+              <span class="project-dot" [style.background]="projectColor()"></span>
+              <span class="sidebar-value">{{ name }}</span>
+            </div>
+          } @else {
+            <span class="sidebar-value muted">Unassigned</span>
+          }
+        </div>
+
+        <!-- Labels -->
+        <div class="sidebar-field">
+          <label class="sidebar-label">Labels</label>
+          @if (task.labels.length > 0) {
+            <mat-chip-set>
+              @for (label of task.labels; track label) {
+                <mat-chip>{{ label }}</mat-chip>
+              }
+            </mat-chip-set>
+          } @else {
+            <span class="sidebar-value muted">No labels</span>
+          }
+        </div>
+
+        <!-- Dates -->
+        <div class="sidebar-field">
+          <label class="sidebar-label">Created</label>
+          <span class="sidebar-value">{{ formatDateTime(task.createdAt) }}</span>
+        </div>
+
+        <div class="sidebar-field">
+          <label class="sidebar-label">Updated</label>
+          <span class="sidebar-value">{{ formatDateTime(task.updatedAt) }}</span>
+        </div>
+
+        @if (task.completedAt) {
+          <div class="sidebar-field">
+            <label class="sidebar-label">Completed</label>
+            <span class="sidebar-value">{{ formatDateTime(task.completedAt) }}</span>
+          </div>
+        }
+      </aside>
+    </div>
+  } @else {
+    <div class="not-found">
+      <mat-icon class="not-found-icon">search_off</mat-icon>
+      <h2>Task not found</h2>
+      <p>The task you are looking for does not exist or has been deleted.</p>
+      <button mat-flat-button color="primary" (click)="goBack()">
+        Back to Tasks
+      </button>
+    </div>
+  }
+</div>

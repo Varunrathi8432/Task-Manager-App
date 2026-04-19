@@ -1,0 +1,119 @@
+<h2 mat-dialog-title>{{ isEditing ? 'Edit Task' : 'Create Task' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="taskForm" class="task-form">
+    <!-- Title -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title" placeholder="Enter task title">
+      @if (taskForm.controls.title.hasError('required')) {
+        <mat-error>Title is required</mat-error>
+      }
+      @if (taskForm.controls.title.hasError('maxlength')) {
+        <mat-error>Title must be 200 characters or less</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Description -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" placeholder="Enter task description" rows="4"></textarea>
+    </mat-form-field>
+
+    <!-- Priority & Status Row -->
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Priority</mat-label>
+        <mat-select formControlName="priority">
+          @for (p of priorities; track p) {
+            <mat-option [value]="p">
+              @switch (p) {
+                @case ('low') { Low }
+                @case ('medium') { Medium }
+                @case ('high') { High }
+                @case ('critical') { Critical }
+              }
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          @for (s of statuses; track s) {
+            <mat-option [value]="s">
+              @switch (s) {
+                @case ('todo') { To Do }
+                @case ('in-progress') { In Progress }
+                @case ('review') { Review }
+                @case ('done') { Done }
+              }
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Due Date & Project Row -->
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Due Date</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="dueDate" placeholder="Select date">
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Project</mat-label>
+        <mat-select formControlName="projectId">
+          <mat-option [value]="null">No Project</mat-option>
+          @for (project of projectStore.projects(); track project.id) {
+            <mat-option [value]="project.id">
+              <span class="project-option">
+                <span class="project-color-dot" [style.background]="project.color"></span>
+                {{ project.name }}
+              </span>
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Labels -->
+    <div class="labels-section">
+      <label class="labels-title">Labels</label>
+      <div class="labels-input-row">
+        <mat-form-field appearance="outline" class="label-input">
+          <mat-label>Add a label</mat-label>
+          <input matInput [(ngModel)]="labelInput" [ngModelOptions]="{ standalone: true }"
+                 (keydown.enter)="addLabel(); $event.preventDefault()"
+                 placeholder="Type and press Enter">
+          <button mat-icon-button matSuffix (click)="addLabel()" type="button"
+                  [disabled]="!labelInput.trim()">
+            <mat-icon>add</mat-icon>
+          </button>
+        </mat-form-field>
+      </div>
+      @if (taskForm.value.labels && taskForm.value.labels.length > 0) {
+        <mat-chip-set class="label-chips">
+          @for (label of taskForm.value.labels; track label) {
+            <mat-chip (removed)="removeLabel(label)">
+              {{ label }}
+              <button matChipRemove>
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+          }
+        </mat-chip-set>
+      }
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" (click)="onSave()" [disabled]="taskForm.invalid">
+    {{ isEditing ? 'Update' : 'Create' }}
+  </button>
+</mat-dialog-actions>
