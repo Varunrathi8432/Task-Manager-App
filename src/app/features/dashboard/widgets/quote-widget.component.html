@@ -1,0 +1,8 @@
+<div class="quote-container">
+  <mat-icon class="quote-icon">format_quote</mat-icon>
+  <blockquote class="quote-text">{{ quote().content }}</blockquote>
+  <span class="quote-author">&mdash; {{ quote().author }}</span>
+  <button class="refresh-button" (click)="refresh()" aria-label="Get new quote">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</div>

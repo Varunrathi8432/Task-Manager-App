@@ -1,0 +1,23 @@
+.dashboard-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid-item {
+  background: var(--tm-bg-card);
+  border: 1px solid var(--tm-border);
+  border-radius: var(--tm-radius-lg);
+  padding: 24px;
+}

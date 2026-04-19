@@ -1,0 +1,9 @@
+<h3 class="widget-title">Productivity</h3>
+<p class="widget-subtitle">Tasks completed in the last 14 days</p>
+<div class="chart-container">
+  <canvas baseChart
+    [type]="'bar'"
+    [data]="chartData()"
+    [options]="chartOptions">
+  </canvas>
+</div>

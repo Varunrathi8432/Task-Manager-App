@@ -1,0 +1,27 @@
+<h3 class="widget-title">Upcoming Deadlines</h3>
+<p class="widget-subtitle">Tasks due within the next 7 days</p>
+
+@if (upcomingTasks().length === 0) {
+  <div class="empty-state">
+    <mat-icon>event_available</mat-icon>
+    <p>No upcoming deadlines. You're all caught up!</p>
+  </div>
+} @else {
+  <div class="deadline-list">
+    @for (task of upcomingTasks(); track task.id) {
+      <div class="deadline-item" (click)="onTaskClick(task.id)" (keydown.enter)="onTaskClick(task.id)" tabindex="0">
+        <div class="deadline-info">
+          <span class="deadline-title">{{ task.title }}</span>
+          <div class="deadline-meta">
+            <app-priority-badge [priority]="task.priority" />
+            <span class="deadline-date" [class.overdue]="isOverdue(task)">
+              <mat-icon class="date-icon">schedule</mat-icon>
+              {{ task.dueDate | relativeDate }}
+            </span>
+          </div>
+        </div>
+        <mat-icon class="chevron-icon">chevron_right</mat-icon>
+      </div>
+    }
+  </div>
+}

@@ -1,0 +1,28 @@
+<h3 class="widget-title">Quick Add Task</h3>
+<p class="widget-subtitle">Create a new task in seconds</p>
+
+<div class="quick-add-form">
+  <mat-form-field appearance="outline" class="title-field">
+    <mat-label>Task title</mat-label>
+    <input matInput
+      [value]="title()"
+      (input)="title.set($any($event.target).value)"
+      (keydown.enter)="onAdd()"
+      placeholder="What needs to be done?" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="priority-field">
+    <mat-label>Priority</mat-label>
+    <mat-select [value]="priority()" (selectionChange)="priority.set($event.value)">
+      <mat-option value="low">Low</mat-option>
+      <mat-option value="medium">Medium</mat-option>
+      <mat-option value="high">High</mat-option>
+      <mat-option value="critical">Critical</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" class="add-button" (click)="onAdd()" [disabled]="!title().trim()">
+    <mat-icon>add</mat-icon>
+    Add
+  </button>
+</div>
