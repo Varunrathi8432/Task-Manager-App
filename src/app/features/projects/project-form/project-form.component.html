@@ -1,0 +1,49 @@
+<h2 mat-dialog-title>{{ isEditing ? 'Edit Project' : 'New Project' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="project-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Project Name</mat-label>
+      <input matInput formControlName="name" placeholder="Enter project name" />
+      @if (form.controls.name.hasError('required') && form.controls.name.touched) {
+        <mat-error>Project name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea
+        matInput
+        formControlName="description"
+        placeholder="Enter project description"
+        rows="3"
+      ></textarea>
+    </mat-form-field>
+
+    <div class="color-picker">
+      <label class="color-label">Project Color</label>
+      <div class="color-swatches">
+        @for (color of colors; track color) {
+          <button
+            type="button"
+            class="color-swatch"
+            [style.background-color]="color"
+            [class.selected]="form.value.color === color"
+            (click)="selectColor(color)"
+          >
+            @if (form.value.color === color) {
+              <span class="check-mark">&#10003;</span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" [disabled]="form.invalid" (click)="onSave()">
+    {{ isEditing ? 'Update' : 'Create' }}
+  </button>
+</mat-dialog-actions>

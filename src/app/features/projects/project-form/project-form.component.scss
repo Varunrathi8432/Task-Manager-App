@@ -1,0 +1,61 @@
+.project-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 400px;
+
+  @media (max-width: 576px) {
+    min-width: unset;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.color-picker {
+  margin-top: 4px;
+}
+
+.color-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--tm-text-secondary);
+  margin-bottom: 12px;
+}
+
+.color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  padding: 0;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+
+  &.selected {
+    border-color: var(--tm-text-primary);
+    transform: scale(1.1);
+  }
+}
+
+.check-mark {
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}

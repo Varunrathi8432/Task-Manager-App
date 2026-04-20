@@ -1,0 +1,80 @@
+<div class="project-detail-container">
+  @if (project(); as project) {
+    <div class="back-nav">
+      <button mat-icon-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <span class="back-label">Back to Projects</span>
+    </div>
+
+    <div class="project-header">
+      <div class="project-color-dot" [style.background-color]="project.color"></div>
+      <div class="project-info">
+        <h1 class="project-title">{{ project.name }}</h1>
+        @if (project.description) {
+          <p class="project-description">{{ project.description }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-stats">
+        <div class="progress-stat">
+          <span class="progress-stat-value">{{ projectTasks().length }}</span>
+          <span class="progress-stat-label">Total Tasks</span>
+        </div>
+        <div class="progress-stat">
+          <span class="progress-stat-value">{{ completedCount() }}</span>
+          <span class="progress-stat-label">Completed</span>
+        </div>
+        <div class="progress-stat">
+          <span class="progress-stat-value">{{ progress() }}%</span>
+          <span class="progress-stat-label">Progress</span>
+        </div>
+      </div>
+      <mat-progress-bar
+        mode="determinate"
+        [value]="progress()"
+        [style.--mdc-linear-progress-active-indicator-color]="project.color"
+      />
+    </div>
+
+    <div class="tasks-section">
+      <h2 class="section-title">Tasks</h2>
+
+      @if (projectTasks().length === 0) {
+        <div class="no-tasks">
+          <mat-icon>assignment</mat-icon>
+          <p>No tasks assigned to this project yet.</p>
+        </div>
+      } @else {
+        <div class="task-list">
+          @for (task of projectTasks(); track task.id) {
+            <div class="task-item" (click)="navigateToTask(task.id)">
+              <div class="task-main">
+                <span class="task-title" [class.completed]="task.status === 'done'">
+                  {{ task.title }}
+                </span>
+                <div class="task-meta">
+                  <app-status-chip [status]="task.status" />
+                  <app-priority-badge [priority]="task.priority" />
+                  @if (task.dueDate) {
+                    <span class="task-due">{{ task.dueDate | relativeDate }}</span>
+                  }
+                </div>
+              </div>
+              <mat-icon class="chevron-icon">chevron_right</mat-icon>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="not-found">
+      <mat-icon>search_off</mat-icon>
+      <h2>Project not found</h2>
+      <p>The project you are looking for does not exist.</p>
+      <button mat-flat-button color="primary" (click)="goBack()">Back to Projects</button>
+    </div>
+  }
+</div>
