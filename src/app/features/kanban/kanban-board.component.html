@@ -1,0 +1,128 @@
+<div class="kanban-container">
+  <div class="kanban-header">
+    <app-page-header
+      title="Kanban Board"
+      [subtitle]="taskStore.totalCount() + ' tasks across ' + columns.length + ' columns'">
+    </app-page-header>
+
+    <button
+      mat-fab
+      color="primary"
+      class="fab-button"
+      matTooltip="Create new task"
+      (click)="openTaskForm()">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+
+  <div class="board">
+    @for (column of columns; track column.status) {
+      <div class="column">
+        <!-- Column Header -->
+        <div class="column-header">
+          <mat-icon class="column-icon">{{ column.icon }}</mat-icon>
+          <span class="column-title">{{ column.label }}</span>
+          <span class="count">{{ getColumnCount(column.status) }}</span>
+          <button
+            mat-icon-button
+            class="add-btn"
+            matTooltip="Add task to {{ column.label }}"
+            (click)="startAddingTask(column.status)">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+
+        <!-- Column Body (Drop Zone) -->
+        <div
+          class="column-body"
+          cdkDropList
+          [id]="'column-' + column.status"
+          [cdkDropListData]="getTasksForStatus(column.status)"
+          [cdkDropListConnectedTo]="columnIds"
+          (cdkDropListDropped)="onDrop($event, column.status)">
+
+          @for (task of getTasksForStatus(column.status); track task.id) {
+            <div
+              class="kanban-card"
+              [class.priority-low]="task.priority === 'low'"
+              [class.priority-medium]="task.priority === 'medium'"
+              [class.priority-high]="task.priority === 'high'"
+              [class.priority-critical]="task.priority === 'critical'"
+              cdkDrag
+              [cdkDragData]="task">
+
+              <!-- Drag Preview -->
+              <div class="drag-preview" *cdkDragPreview>
+                <div class="kanban-card"
+                     [class.priority-low]="task.priority === 'low'"
+                     [class.priority-medium]="task.priority === 'medium'"
+                     [class.priority-high]="task.priority === 'high'"
+                     [class.priority-critical]="task.priority === 'critical'">
+                  <div class="card-title">{{ task.title }}</div>
+                </div>
+              </div>
+
+              <!-- Card Content -->
+              <div class="card-title" (click)="openTaskDetail(task.id)">
+                {{ task.title }}
+              </div>
+
+              <div class="card-meta">
+                @if (task.dueDate) {
+                  <span class="card-date" [class.overdue]="isOverdue(task)">
+                    <mat-icon class="meta-icon">schedule</mat-icon>
+                    {{ task.dueDate | relativeDate }}
+                  </span>
+                }
+
+                @if (task.projectId) {
+                  <span class="card-project" matTooltip="{{ getProjectName(task.projectId) }}">
+                    <span class="project-dot" [style.background]="getProjectColor(task.projectId)"></span>
+                  </span>
+                }
+
+                @if (getSubtaskProgress(task); as progress) {
+                  <span class="card-subtasks" matTooltip="Subtasks: {{ progress.completed }}/{{ progress.total }}">
+                    <mat-icon class="meta-icon">checklist</mat-icon>
+                    {{ progress.completed }}/{{ progress.total }}
+                  </span>
+                }
+              </div>
+
+              @if (task.labels.length > 0) {
+                <div class="card-labels">
+                  @for (label of task.labels; track label) {
+                    <span class="card-label">{{ label }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Inline Add Form -->
+        @if (addingToColumn() === column.status) {
+          <div class="inline-add">
+            <input
+              type="text"
+              placeholder="Enter task title..."
+              [ngModel]="newTaskTitle()"
+              (ngModelChange)="newTaskTitle.set($event)"
+              (keydown.enter)="submitNewTask(column.status)"
+              (keydown.escape)="cancelAdding()"
+              #addInput>
+            <div class="inline-add-actions">
+              <button mat-flat-button color="primary" (click)="submitNewTask(column.status)"
+                      [disabled]="!newTaskTitle().trim()">
+                Add
+              </button>
+              <button mat-button (click)="cancelAdding()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

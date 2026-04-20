@@ -1,0 +1,262 @@
+:host {
+  display: block;
+}
+
+.kanban-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.kanban-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.fab-button {
+  flex-shrink: 0;
+}
+
+.board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+
+.column {
+  flex: 1;
+  min-width: 280px;
+  max-width: 340px;
+  background: var(--tm-bg-secondary);
+  border-radius: var(--tm-radius-lg);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 200px);
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--tm-text-primary);
+
+  .column-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--tm-text-secondary);
+  }
+
+  .column-title {
+    white-space: nowrap;
+  }
+
+  .count {
+    background: var(--tm-border);
+    color: var(--tm-text-secondary);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .add-btn {
+    margin-left: auto;
+  }
+}
+
+.column-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 8px 8px;
+  min-height: 100px;
+}
+
+.kanban-card {
+  background: var(--tm-bg-card);
+  border: 1px solid var(--tm-border);
+  border-radius: var(--tm-radius);
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: grab;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    box-shadow: var(--tm-shadow);
+  }
+
+  &.priority-low {
+    border-left-color: var(--tm-priority-low);
+  }
+
+  &.priority-medium {
+    border-left-color: var(--tm-priority-medium);
+  }
+
+  &.priority-high {
+    border-left-color: var(--tm-priority-high);
+  }
+
+  &.priority-critical {
+    border-left-color: var(--tm-priority-critical);
+  }
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tm-text-primary);
+  margin-bottom: 8px;
+  cursor: pointer;
+  line-height: 1.4;
+
+  &:hover {
+    color: var(--tm-accent);
+  }
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--tm-text-muted);
+  flex-wrap: wrap;
+}
+
+.meta-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+.card-date {
+  display: flex;
+  align-items: center;
+
+  &.overdue {
+    color: var(--tm-priority-high);
+    font-weight: 500;
+  }
+}
+
+.card-project {
+  display: flex;
+  align-items: center;
+}
+
+.project-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.card-subtasks {
+  display: flex;
+  align-items: center;
+}
+
+.card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.card-label {
+  background: var(--tm-bg-secondary);
+  color: var(--tm-text-secondary);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+// CDK drag styles
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: var(--tm-radius);
+  box-shadow: var(--tm-shadow-lg);
+  opacity: 0.9;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+  background: var(--tm-border);
+  border: 2px dashed var(--tm-text-muted);
+  border-radius: var(--tm-radius);
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging .kanban-card:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Drag preview card styling
+.drag-preview {
+  .kanban-card {
+    width: 280px;
+    background: var(--tm-bg-card);
+    border: 1px solid var(--tm-border);
+    padding: 12px;
+  }
+}
+
+// Inline add form
+.inline-add {
+  padding: 8px;
+
+  input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--tm-border);
+    border-radius: var(--tm-radius);
+    background: var(--tm-bg-card);
+    color: var(--tm-text-primary);
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: var(--tm-accent);
+      box-shadow: 0 0 0 2px rgba(var(--tm-accent-rgb, 99, 102, 241), 0.15);
+    }
+
+    &::placeholder {
+      color: var(--tm-text-muted);
+    }
+  }
+
+  .inline-add-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .kanban-container {
+    padding: 16px;
+  }
+
+  .board {
+    gap: 12px;
+  }
+
+  .column {
+    min-width: 260px;
+  }
+}
