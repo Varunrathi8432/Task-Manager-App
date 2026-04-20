@@ -1,0 +1,143 @@
+.calendar-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-label {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--tm-text-primary);
+  min-width: 180px;
+  text-align: center;
+}
+
+.today-btn {
+  margin-left: 8px;
+}
+
+.calendar-grid {
+  margin-top: 24px;
+  background: var(--tm-bg-card);
+  border: 1px solid var(--tm-border);
+  border-radius: var(--tm-radius-lg);
+  overflow: hidden;
+}
+
+.weekday-headers {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--tm-bg-secondary);
+  border-bottom: 1px solid var(--tm-border);
+}
+
+.weekday-header {
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tm-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.day-cells {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.day-cell {
+  min-height: 100px;
+  padding: 8px;
+  border-right: 1px solid var(--tm-border);
+  border-bottom: 1px solid var(--tm-border);
+  transition: background var(--tm-transition);
+
+  &:nth-child(7n) {
+    border-right: none;
+  }
+
+  &:hover {
+    background: var(--tm-bg-hover);
+  }
+
+  &.other-month {
+    opacity: 0.4;
+    background: var(--tm-bg-secondary);
+  }
+
+  &.today {
+    background: rgba(59, 130, 246, 0.04);
+  }
+
+  @media (max-width: 768px) {
+    min-height: 64px;
+    padding: 4px;
+  }
+}
+
+.day-number {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--tm-text-secondary);
+  margin-bottom: 4px;
+
+  &.today-number {
+    background: var(--tm-accent);
+    color: #ffffff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+}
+
+.day-tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.task-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: scale(1.4);
+  }
+
+  @media (max-width: 768px) {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+.more-badge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--tm-text-muted);
+  background: var(--tm-bg-secondary);
+  border-radius: 4px;
+  padding: 1px 4px;
+  line-height: 1;
+}

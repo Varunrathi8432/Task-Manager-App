@@ -1,0 +1,50 @@
+<div class="calendar-container">
+  <app-page-header title="Calendar" subtitle="View your tasks by due date">
+    <div class="calendar-nav">
+      <button mat-icon-button (click)="previousMonth()" matTooltip="Previous month">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="month-label">{{ monthLabel() }}</span>
+      <button mat-icon-button (click)="nextMonth()" matTooltip="Next month">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      <button mat-stroked-button class="today-btn" (click)="goToToday()">Today</button>
+    </div>
+  </app-page-header>
+
+  <div class="calendar-grid">
+    <div class="weekday-headers">
+      @for (day of weekDays; track day) {
+        <div class="weekday-header">{{ day }}</div>
+      }
+    </div>
+
+    <div class="day-cells">
+      @for (day of calendarDays(); track day.dateStr) {
+        <div
+          class="day-cell"
+          [class.other-month]="!day.isCurrentMonth"
+          [class.today]="day.isToday"
+        >
+          <span class="day-number" [class.today-number]="day.isToday">
+            {{ day.date.getDate() }}
+          </span>
+
+          <div class="day-tasks">
+            @for (task of day.tasks.slice(0, 3); track task.id) {
+              <button
+                class="task-dot"
+                [style.background-color]="getPriorityColor(task.priority)"
+                [matTooltip]="task.title"
+                (click)="onTaskClick(task.id)"
+              ></button>
+            }
+            @if (day.tasks.length > 3) {
+              <span class="more-badge">+{{ day.tasks.length - 3 }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
