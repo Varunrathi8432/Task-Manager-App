@@ -1,0 +1,91 @@
+<div class="analytics-container">
+  <app-page-header title="Analytics" subtitle="Insights and statistics about your tasks" />
+
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-icon-wrap blue">
+        <mat-icon>assignment</mat-icon>
+      </div>
+      <div class="card-data">
+        <span class="card-value">{{ totalTasks() }}</span>
+        <span class="card-label">Total Tasks</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="card-icon-wrap green">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="card-data">
+        <span class="card-value">{{ completedTasks() }}</span>
+        <span class="card-label">Completed</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="card-icon-wrap purple">
+        <mat-icon>speed</mat-icon>
+      </div>
+      <div class="card-data">
+        <span class="card-value">{{ completionRate() }}%</span>
+        <span class="card-label">Completion Rate</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="card-icon-wrap red">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <div class="card-data">
+        <span class="card-value">{{ overdueTasks() }}</span>
+        <span class="card-label">Overdue</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-section">
+      <h3 class="chart-title">Tasks by Status</h3>
+      <div class="chart-wrapper doughnut">
+        <canvas baseChart
+          type="doughnut"
+          [data]="statusChartData()"
+          [options]="doughnutOptions"
+        ></canvas>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <h3 class="chart-title">Tasks by Priority</h3>
+      <div class="chart-wrapper">
+        <canvas baseChart
+          type="bar"
+          [data]="priorityChartData()"
+          [options]="barOptions"
+        ></canvas>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <h3 class="chart-title">Completion Trend (30 Days)</h3>
+      <div class="chart-wrapper">
+        <canvas baseChart
+          type="line"
+          [data]="trendChartData()"
+          [options]="lineOptions"
+        ></canvas>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <h3 class="chart-title">Tasks by Project</h3>
+      <div class="chart-wrapper">
+        <canvas baseChart
+          type="bar"
+          [data]="projectChartData()"
+          [options]="barOptions"
+        ></canvas>
+      </div>
+    </div>
+  </div>
+</div>
