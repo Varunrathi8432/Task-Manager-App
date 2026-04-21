@@ -8,7 +8,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { TaskStore } from '@store/task.store';
 import { ProjectStore } from '@store/project.store';
-import { PriorityBadgeComponent } from '@shared/components/priority-badge/priority-badge.component';
 import { RelativeDatePipe } from '@shared/pipes/relative-date.pipe';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { TaskFormComponent } from '../tasks/task-form/task-form.component';
@@ -21,7 +20,7 @@ import { isBefore, parseISO } from 'date-fns';
   imports: [
     CdkDropList, CdkDrag, FormsModule,
     MatButtonModule, MatIconModule, MatTooltipModule,
-    PriorityBadgeComponent, RelativeDatePipe, PageHeaderComponent,
+    RelativeDatePipe, PageHeaderComponent,
   ],
   templateUrl: './kanban-board.component.html',
   styleUrl: './kanban-board.component.scss',
