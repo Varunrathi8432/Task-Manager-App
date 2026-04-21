@@ -1,0 +1,89 @@
+<div class="settings-container">
+  <app-page-header title="Settings" subtitle="Manage your preferences and data" />
+
+  <mat-tab-group class="settings-tabs" animationDuration="200ms">
+    <!-- Profile Tab -->
+    <mat-tab label="Profile">
+      <div class="tab-content">
+        <div class="section">
+          <h3 class="section-title">Profile Information</h3>
+          <p class="section-description">Update your personal details.</p>
+
+          <form [formGroup]="profileForm" class="profile-form">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Name</mat-label>
+              <input matInput formControlName="name" placeholder="Your name" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="email" type="email" placeholder="Your email" />
+            </mat-form-field>
+
+            <button mat-flat-button color="primary" (click)="saveProfile()">
+              <mat-icon>save</mat-icon>
+              Save Changes
+            </button>
+          </form>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Appearance Tab -->
+    <mat-tab label="Appearance">
+      <div class="tab-content">
+        <div class="section">
+          <h3 class="section-title">Theme</h3>
+          <p class="section-description">Choose your preferred color scheme.</p>
+
+          <div class="theme-toggle-row">
+            <div class="theme-info">
+              <mat-icon>{{ themeService.isDark() ? 'dark_mode' : 'light_mode' }}</mat-icon>
+              <div>
+                <span class="toggle-label">Dark Mode</span>
+                <span class="toggle-description">
+                  {{ themeService.isDark() ? 'Switch to light theme' : 'Switch to dark theme' }}
+                </span>
+              </div>
+            </div>
+            <mat-slide-toggle
+              [checked]="themeService.isDark()"
+              (change)="themeService.toggleTheme()"
+            />
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Data Tab -->
+    <mat-tab label="Data">
+      <div class="tab-content">
+        <div class="section">
+          <h3 class="section-title">Export Data</h3>
+          <p class="section-description">Download your tasks and projects.</p>
+
+          <div class="action-buttons">
+            <button mat-stroked-button (click)="exportJSON()">
+              <mat-icon>code</mat-icon>
+              Export as JSON
+            </button>
+            <button mat-stroked-button (click)="exportCSV()">
+              <mat-icon>table_chart</mat-icon>
+              Export Tasks as CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="section danger-section">
+          <h3 class="section-title danger-title">Danger Zone</h3>
+          <p class="section-description">Permanently reset all application data. This cannot be undone.</p>
+
+          <button mat-flat-button color="warn" (click)="resetData()">
+            <mat-icon>delete_forever</mat-icon>
+            Reset All Data
+          </button>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
