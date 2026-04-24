@@ -11,34 +11,6 @@ mat-toolbar {
   gap: 8px;
 }
 
-.search-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--tm-bg-secondary);
-  border: 1px solid var(--tm-border);
-  border-radius: var(--tm-radius);
-  color: var(--tm-text-muted);
-  cursor: pointer;
-  font-size: 14px;
-  min-width: 240px;
-  transition: border-color var(--tm-transition);
-
-  &:hover {
-    border-color: var(--tm-accent);
-  }
-
-  kbd {
-    font-size: 11px;
-    padding: 2px 6px;
-    background: var(--tm-bg-card);
-    border: 1px solid var(--tm-border);
-    border-radius: 4px;
-    margin-left: auto;
-  }
-}
-
 .spacer {
   flex: 1;
 }

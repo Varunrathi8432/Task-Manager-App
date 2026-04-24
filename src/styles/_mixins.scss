@@ -44,9 +44,9 @@ $breakpoints: (
   white-space: nowrap;
 }
 
-@mixin page-container {
+@mixin page-container($max-width: 1400px) {
   padding: 24px;
-  max-width: 1400px;
+  max-width: $max-width;
   margin: 0 auto;
 
   @include respond-below(md) {

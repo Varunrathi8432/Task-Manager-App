@@ -4,14 +4,12 @@ import { signalStore, withState, withMethods, withHooks, patchState } from '@ngr
 
 export interface UiState {
   sidebarCollapsed: boolean;
-  commandPaletteOpen: boolean;
   activeView: 'list' | 'kanban' | 'calendar';
   isMobile: boolean;
 }
 
 const initialState: UiState = {
   sidebarCollapsed: false,
-  commandPaletteOpen: false,
   activeView: 'list',
   isMobile: false,
 };
@@ -29,12 +27,6 @@ export const UiStore = signalStore(
     },
     setView(view: UiState['activeView']): void {
       patchState(store, { activeView: view });
-    },
-    toggleCommandPalette(): void {
-      patchState(store, { commandPaletteOpen: !store.commandPaletteOpen() });
-    },
-    closeCommandPalette(): void {
-      patchState(store, { commandPaletteOpen: false });
     },
     setMobile(isMobile: boolean): void {
       patchState(store, { isMobile, sidebarCollapsed: isMobile });

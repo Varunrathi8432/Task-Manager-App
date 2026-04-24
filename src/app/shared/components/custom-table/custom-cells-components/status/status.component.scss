@@ -1,9 +1,5 @@
-:host {
-  display: inline-flex;
-  align-items: center;
-  width: 100%;
-  overflow: hidden;
-}
+@use '../shared-cell-styles' as *;
+@include cell-host;
 
 .table-status {
   display: inline-flex;

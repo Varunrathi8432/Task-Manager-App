@@ -1,0 +1,11 @@
+// Shared :host styling for inline custom-table cell components
+// Used by: text-cell, date-cell, status, priority
+
+@mixin cell-host {
+  :host {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+  }
+}

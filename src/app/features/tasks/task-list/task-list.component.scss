@@ -1,12 +1,12 @@
+@use 'styles/mixins' as mixins;
+
 :host {
   display: block;
   height: 100%;
 }
 
 .task-list-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  @include mixins.page-container;
 }
 
 app-dynamic-filter,
@@ -59,8 +59,3 @@ app-custom-table {
   z-index: 10;
 }
 
-@media (max-width: 768px) {
-  .task-list-container {
-    padding: 16px;
-  }
-}

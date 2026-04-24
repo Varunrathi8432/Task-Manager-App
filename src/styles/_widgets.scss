@@ -1,0 +1,15 @@
+// Shared dashboard widget heading styles
+// Used by: productivity-chart, upcoming-deadlines, quick-add (and any future widget)
+
+.widget-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: var(--tm-text-primary);
+}
+
+.widget-subtitle {
+  font-size: 12px;
+  color: var(--tm-text-secondary);
+  margin: 0 0 16px;
+}

@@ -1,16 +1,12 @@
+@use 'styles/mixins' as mixins;
+
 :host {
   display: block;
   height: 100%;
 }
 
 .settings-container {
-  padding: 24px;
-  max-width: 800px;
-  margin: 0 auto;
-
-  @media (max-width: 768px) {
-    padding: 16px;
-  }
+  @include mixins.page-container(800px);
 }
 
 .settings-tabs {

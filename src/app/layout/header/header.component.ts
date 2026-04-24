@@ -13,24 +13,23 @@ import { ThemeService } from '@core/services/theme.service';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [MatToolbarModule, MatIconModule, MatButtonModule, MatMenuModule, MatTooltipModule, MatDividerModule],
+  imports: [
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatDividerModule,
+  ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    '(document:keydown.control.k)': 'onCommandPalette($event)',
-  },
 })
 export class HeaderComponent {
   protected uiStore = inject(UiStore);
   protected authStore = inject(AuthStore);
   protected themeService = inject(ThemeService);
   private router = inject(Router);
-
-  onCommandPalette(event: Event): void {
-    event.preventDefault();
-    this.uiStore.toggleCommandPalette();
-  }
 
   onLogout(): void {
     this.authStore.logout();

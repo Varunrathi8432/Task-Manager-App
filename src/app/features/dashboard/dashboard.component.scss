@@ -1,12 +1,12 @@
+@use 'styles/mixins' as mixins;
+
 :host {
   display: block;
   height: 100%;
 }
 
 .dashboard-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  @include mixins.page-container;
 }
 
 .dashboard-grid {

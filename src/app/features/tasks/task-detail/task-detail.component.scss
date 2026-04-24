@@ -1,12 +1,12 @@
+@use 'styles/mixins' as mixins;
+
 :host {
   display: block;
   height: 100%;
 }
 
 .task-detail-container {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+  @include mixins.page-container(1200px);
 }
 
 .back-button {
@@ -269,8 +269,3 @@
   }
 }
 
-@media (max-width: 600px) {
-  .task-detail-container {
-    padding: 16px;
-  }
-}

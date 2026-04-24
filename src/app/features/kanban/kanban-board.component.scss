@@ -1,12 +1,12 @@
+@use 'styles/mixins' as mixins;
+
 :host {
   display: block;
   height: 100%;
 }
 
 .kanban-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  @include mixins.page-container;
 }
 
 .kanban-header {
@@ -252,10 +252,6 @@
 
 // Responsive
 @media (max-width: 768px) {
-  .kanban-container {
-    padding: 16px;
-  }
-
   .board {
     gap: 12px;
   }

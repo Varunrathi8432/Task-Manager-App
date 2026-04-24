@@ -1,16 +1,12 @@
+@use 'styles/mixins' as mixins;
+
 :host {
   display: block;
   height: 100%;
 }
 
 .project-detail-container {
-  padding: 24px;
-  max-width: 1000px;
-  margin: 0 auto;
-
-  @media (max-width: 768px) {
-    padding: 16px;
-  }
+  @include mixins.page-container(1000px);
 }
 
 .back-nav {

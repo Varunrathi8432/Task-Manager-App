@@ -1,15 +1,11 @@
+@use 'styles/mixins' as mixins;
+
 .calendar-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
   height: 100%;
   display: flex;
   flex-direction: column;
   min-height: 0;
-
-  @media (max-width: 768px) {
-    padding: 16px;
-  }
+  @include mixins.page-container;
 }
 
 .calendar-wrapper {
