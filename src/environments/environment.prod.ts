@@ -1,3 +1,6 @@
+// PRODUCTION environment — replace with a SEPARATE Firebase project for production.
+// Never share dev and prod databases. Create a second Firebase project at:
+// https://console.firebase.google.com — then paste those values here.
 export const environment = {
   production: true,
   storagePrefix: 'tm_',

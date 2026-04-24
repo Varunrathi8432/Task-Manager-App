@@ -30,3 +30,7 @@ export interface AuthResponse {
   expiresAt: string;
   user: User;
 }
+
+export interface RegisterResponse {
+  message: string;
+}

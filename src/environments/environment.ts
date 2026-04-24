@@ -1,3 +1,5 @@
+// DEV environment — points to your development Firebase project.
+// For local development only. Never use this config in production.
 export const environment = {
   production: false,
   storagePrefix: 'tm_',

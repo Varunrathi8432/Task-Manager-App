@@ -13,7 +13,10 @@ import {
 } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, updateDoc } from '@angular/fire/firestore';
 import { Observable, from, switchMap, catchError, throwError, firstValueFrom } from 'rxjs';
-import { User, UserPreferences, LoginCredentials, RegisterPayload, AuthResponse } from '@core/models';
+import {
+  User, UserPreferences, LoginCredentials,
+  RegisterPayload, AuthResponse, RegisterResponse,
+} from '@core/models';
 
 const DEFAULT_PREFS: UserPreferences = {
   theme: 'light',
@@ -32,13 +35,6 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   'auth/network-request-failed': 'Network error — check your connection',
   'auth/too-many-requests': 'Too many attempts. Try again later.',
 };
-
-export const ERR_EMAIL_NOT_VERIFIED = 'auth/email-not-verified';
-
-export interface RegistrationResult {
-  verificationSent: true;
-  email: string;
-}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -70,13 +66,9 @@ export class AuthService {
 
   async init(): Promise<void> {
     const stream = firebaseUser$(this.auth);
-    // Wait for first emission so guards see the correct state on app boot.
     const firstUser = await firstValueFrom(stream);
-    if (firstUser && firstUser.emailVerified) {
+    if (firstUser?.emailVerified) {
       this.currentUser.set(await this.loadOrCreateProfile(firstUser));
-    } else if (firstUser && !firstUser.emailVerified) {
-      // Persisted session but unverified — sign out so guards reject.
-      await signOut(this.auth);
     }
     stream.subscribe(async (fbUser) => {
       if (!fbUser || !fbUser.emailVerified) {
@@ -91,24 +83,19 @@ export class AuthService {
     return from(signInWithEmailAndPassword(this.auth, credentials.email, credentials.password)).pipe(
       switchMap(async cred => {
         if (!cred.user.emailVerified) {
-          await sendEmailVerification(cred.user);
           await signOut(this.auth);
-          const err = new Error(
-            'Please verify your email before logging in. A fresh verification link has been sent to your inbox.',
-          );
-          (err as Error & { code: string }).code = ERR_EMAIL_NOT_VERIFIED;
-          throw err;
+          throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
         }
         const user = await this.loadOrCreateProfile(cred.user);
         this.currentUser.set(user);
         const token = await cred.user.getIdToken();
         return { token, expiresAt: '', user } as AuthResponse;
       }),
-      catchError(err => throwError(() => this.wrapError(err))),
+      catchError(err => throwError(() => new Error(this.friendlyError(err)))),
     );
   }
 
-  register(payload: RegisterPayload): Observable<RegistrationResult> {
+  register(payload: RegisterPayload): Observable<RegisterResponse> {
     return from(createUserWithEmailAndPassword(this.auth, payload.email, payload.password)).pipe(
       switchMap(async cred => {
         await fbUpdateProfile(cred.user, { displayName: payload.name });
@@ -119,35 +106,36 @@ export class AuthService {
           avatar: '',
           preferences: { ...DEFAULT_PREFS },
         };
+        // Write profile while still authenticated, then sign out until email verified.
         await setDoc(doc(this.firestore, `users/${cred.user.uid}`), profile);
         await sendEmailVerification(cred.user);
         await signOut(this.auth);
-        return { verificationSent: true as const, email: payload.email };
+        return {
+          message: `We've sent a verification email to ${payload.email}. Please verify your email to sign in.`,
+        } as RegisterResponse;
       }),
-      catchError(err => throwError(() => this.wrapError(err))),
+      catchError(err => throwError(() => new Error(this.friendlyError(err)))),
     );
   }
 
-  async resetPassword(email: string): Promise<void> {
-    try {
-      await sendPasswordResetEmail(this.auth, email);
-    } catch (err) {
-      throw this.wrapError(err);
-    }
+  resendVerificationEmail(email: string, password: string): Observable<void> {
+    return from(signInWithEmailAndPassword(this.auth, email, password)).pipe(
+      switchMap(async cred => {
+        if (cred.user.emailVerified) {
+          await signOut(this.auth);
+          throw new Error('Your email is already verified. You can sign in now.');
+        }
+        await sendEmailVerification(cred.user);
+        await signOut(this.auth);
+      }),
+      catchError(err => throwError(() => new Error(this.friendlyError(err)))),
+    );
   }
 
-  async resendVerification(email: string, password: string): Promise<void> {
-    try {
-      const cred = await signInWithEmailAndPassword(this.auth, email, password);
-      if (cred.user.emailVerified) {
-        await signOut(this.auth);
-        throw new Error('This email is already verified. You can sign in now.');
-      }
-      await sendEmailVerification(cred.user);
-      await signOut(this.auth);
-    } catch (err) {
-      throw this.wrapError(err);
-    }
+  sendPasswordReset(email: string): Observable<void> {
+    return from(sendPasswordResetEmail(this.auth, email)).pipe(
+      catchError(err => throwError(() => new Error(this.friendlyError(err)))),
+    );
   }
 
   logout(): void {
@@ -202,12 +190,9 @@ export class AuthService {
     return profile;
   }
 
-  private wrapError(err: unknown): Error {
-    const code = (err as { code?: string })?.code;
-    if (code === ERR_EMAIL_NOT_VERIFIED) return err as Error;
-    const message = (code && AUTH_ERROR_MESSAGES[code]) ?? (err as Error)?.message ?? 'Authentication failed';
-    const wrapped = new Error(message);
-    if (code) (wrapped as Error & { code: string }).code = code;
-    return wrapped;
+  private friendlyError(err: unknown): string {
+    const raw = err as { code?: string; message?: string };
+    if (raw?.code && AUTH_ERROR_MESSAGES[raw.code]) return AUTH_ERROR_MESSAGES[raw.code];
+    return raw?.message ?? 'Authentication failed';
   }
 }

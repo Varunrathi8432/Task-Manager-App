@@ -4,6 +4,17 @@
     <h1>TaskFlow</h1>
   </div>
 
+  @if (authStore.successMessage()) {
+    <div class="success-block">
+      <mat-icon>mark_email_read</mat-icon>
+      <h2>Check your inbox</h2>
+      <p>{{ authStore.successMessage() }}</p>
+      <a routerLink="/auth/login" mat-flat-button color="primary" class="submit-btn">
+        Go to Sign In
+      </a>
+    </div>
+  } @else {
+
   <div class="form-heading">
     <h2>Create your account</h2>
     <p>Start managing your tasks today</p>
@@ -132,4 +143,6 @@
     Already have an account?
     <a routerLink="/auth/login">Sign in</a>
   </div>
+
+  } <!-- end @else -->
 </div>

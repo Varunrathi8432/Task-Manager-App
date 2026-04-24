@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "task-manager-app-8e35c",
+    "production": "task-manager-app-8e35c"
+  }
+}

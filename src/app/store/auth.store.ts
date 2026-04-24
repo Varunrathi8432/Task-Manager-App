@@ -2,25 +2,24 @@ import { computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { signalStore, withState, withComputed, withMethods, withHooks, patchState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { pipe, switchMap, tap, catchError, EMPTY, from } from 'rxjs';
-import { AuthService, ERR_EMAIL_NOT_VERIFIED } from '@core/auth/auth.service';
-import { NotificationService } from '@core/services/notification.service';
+import { pipe, switchMap, tap, catchError, EMPTY } from 'rxjs';
+import { AuthService } from '@core/auth/auth.service';
 import { User, LoginCredentials, RegisterPayload } from '@core/models';
 
 export interface AuthState {
   user: User | null;
   loading: boolean;
   error: string | null;
-  errorCode: string | null;
-  lastLoginEmail: string | null;
+  emailVerificationRequired: boolean;
+  successMessage: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
   loading: false,
   error: null,
-  errorCode: null,
-  lastLoginEmail: null,
+  emailVerificationRequired: false,
+  successMessage: null,
 };
 
 export const AuthStore = signalStore(
@@ -31,101 +30,102 @@ export const AuthStore = signalStore(
     isAuthenticated: computed(() => store.user() !== null),
     userName: computed(() => store.user()?.name ?? ''),
     userEmail: computed(() => store.user()?.email ?? ''),
-    emailVerificationRequired: computed(() => store.errorCode() === ERR_EMAIL_NOT_VERIFIED),
     userInitials: computed(() => {
       const user = store.user();
       if (!user) return '';
       const name = (user.name ?? '').trim();
       if (name) {
-        return name
-          .split(/\s+/)
-          .filter(Boolean)
-          .map(n => n[0])
-          .join('')
-          .toUpperCase()
-          .slice(0, 2);
+        return name.split(/\s+/).filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2);
       }
-      const email = (user.email ?? '').trim();
-      return email ? email[0].toUpperCase() : '';
+      return (user.email ?? '').trim()[0]?.toUpperCase() ?? '';
     }),
+    emailVerificationRequired: computed(() => store.emailVerificationRequired()),
   })),
 
   withMethods((store) => {
     const authService = inject(AuthService);
-    const notification = inject(NotificationService);
     const router = inject(Router);
 
     return {
       login: rxMethod<LoginCredentials & { returnUrl?: string }>(
         pipe(
-          tap(creds => patchState(store, { loading: true, error: null, errorCode: null, lastLoginEmail: creds.email })),
+          tap(() => patchState(store, { loading: true, error: null, emailVerificationRequired: false })),
           switchMap(creds => authService.login(creds).pipe(
             tap(response => {
-              patchState(store, { user: response.user, loading: false, error: null, errorCode: null });
+              patchState(store, { user: response.user, loading: false, error: null });
               router.navigateByUrl(creds.returnUrl ?? '/dashboard');
             }),
-            catchError((err: Error & { code?: string }) => {
-              patchState(store, { loading: false, error: err.message, errorCode: err.code ?? null });
+            catchError(err => {
+              const isVerificationError = err.message?.includes('verify your email');
+              patchState(store, {
+                loading: false,
+                error: err.message,
+                emailVerificationRequired: isVerificationError,
+              });
               return EMPTY;
             }),
           )),
         )
       ),
+
       register: rxMethod<RegisterPayload>(
         pipe(
-          tap(() => patchState(store, { loading: true, error: null, errorCode: null })),
+          tap(() => patchState(store, { loading: true, error: null, successMessage: null })),
           switchMap(payload => authService.register(payload).pipe(
-            tap(result => {
-              patchState(store, { loading: false, error: null, errorCode: null });
-              notification.success(
-                `Verification email sent to ${result.email}. Please verify before signing in.`,
-                6000,
-              );
-              router.navigate(['/auth/login']);
+            tap(res => {
+              patchState(store, { loading: false, successMessage: res.message });
             }),
-            catchError((err: Error & { code?: string }) => {
-              patchState(store, { loading: false, error: err.message, errorCode: err.code ?? null });
+            catchError(err => {
+              patchState(store, { loading: false, error: err.message });
               return EMPTY;
             }),
           )),
         )
       ),
+
       resendVerification: rxMethod<{ email: string; password: string }>(
         pipe(
-          tap(() => patchState(store, { loading: true })),
-          switchMap(({ email, password }) => from(authService.resendVerification(email, password)).pipe(
+          tap(() => patchState(store, { loading: true, error: null })),
+          switchMap(({ email, password }) => authService.resendVerificationEmail(email, password).pipe(
             tap(() => {
-              patchState(store, { loading: false, error: null, errorCode: null });
-              notification.success('Verification email sent. Check your inbox.');
+              patchState(store, {
+                loading: false,
+                error: null,
+                successMessage: 'Verification email sent! Check your inbox.',
+                emailVerificationRequired: false,
+              });
             }),
-            catchError((err: Error) => {
+            catchError(err => {
               patchState(store, { loading: false, error: err.message });
-              notification.error(err.message);
               return EMPTY;
             }),
           )),
         )
       ),
+
       forgotPassword: rxMethod<string>(
         pipe(
-          tap(() => patchState(store, { loading: true, error: null, errorCode: null })),
-          switchMap(email => from(authService.resetPassword(email)).pipe(
+          tap(() => patchState(store, { loading: true, error: null, successMessage: null })),
+          switchMap(email => authService.sendPasswordReset(email).pipe(
             tap(() => {
-              patchState(store, { loading: false });
-              notification.success('Password reset email sent. Check your inbox.', 6000);
-              router.navigate(['/auth/login']);
+              patchState(store, {
+                loading: false,
+                successMessage: 'Password reset email sent! Check your inbox.',
+              });
             }),
-            catchError((err: Error) => {
+            catchError(err => {
               patchState(store, { loading: false, error: err.message });
               return EMPTY;
             }),
           )),
         )
       ),
+
       logout(): void {
         authService.logout();
-        patchState(store, { user: null, error: null, errorCode: null });
+        patchState(store, { user: null, error: null, successMessage: null, emailVerificationRequired: false });
       },
+
       checkSession(): void {
         authService.checkAuthStatus();
         const user = authService.user();
@@ -133,9 +133,15 @@ export const AuthStore = signalStore(
           patchState(store, { user });
         }
       },
+
       clearError(): void {
-        patchState(store, { error: null, errorCode: null });
+        patchState(store, { error: null, emailVerificationRequired: false });
       },
+
+      clearSuccess(): void {
+        patchState(store, { successMessage: null });
+      },
+
       updateProfile(updates: Partial<User>): void {
         authService.updateProfile(updates);
         const current = store.user();
@@ -149,7 +155,6 @@ export const AuthStore = signalStore(
   withHooks({
     onInit(store) {
       const authService = inject(AuthService);
-      // Mirror Firebase-persisted session into the store on page load.
       effect(() => {
         patchState(store, { user: authService.user() });
       });
