@@ -12,6 +12,14 @@ const DEFAULT_PRIORITY_COLORS: Record<string, PillColorConfig> = {
   critical: { label: 'Critical', color: '#b71c1c' },
 };
 
+const KNOWN_PRIORITY_KEYS = new Set(['low', 'medium', 'high', 'critical']);
+const PRIORITY_LABELS: Record<string, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  critical: 'Critical',
+};
+
 @Component({
   selector: 'app-priority-cell',
   standalone: true,
@@ -24,6 +32,14 @@ export class PriorityCellComponent implements ICellRendererAngularComp {
 
   params = signal<ICellRendererParams | null>(null);
   rawValue = signal<unknown>(null);
+
+  knownKey = computed<string | null>(() => {
+    const value = this.rawValue();
+    if (value === null || value === undefined || value === '') return null;
+    if (typeof value !== 'string' && typeof value !== 'number') return null;
+    const key = String(value).toLowerCase();
+    return KNOWN_PRIORITY_KEYS.has(key) ? key : null;
+  });
 
   private config = computed<PillColorConfig | null>(() => {
     const value = this.rawValue();
@@ -49,14 +65,18 @@ export class PriorityCellComponent implements ICellRendererAngularComp {
     return { label: key, color: '#616161' };
   });
 
-  label = computed(() => this.config()?.label ?? '—');
+  label = computed(() => {
+    const known = this.knownKey();
+    if (known) return PRIORITY_LABELS[known];
+    return this.config()?.label ?? '—';
+  });
   color = computed(() => this.config()?.color ?? '#616161');
   background = computed(() => {
     const cfg = this.config();
     if (!cfg) return 'transparent';
-    return cfg.bg ?? this.sharedService.convertHexToRGBA(cfg.color, 100);
+    return cfg.bg ?? this.sharedService.convertHexToRGBA(cfg.color, 14);
   });
-  hasValue = computed(() => this.config() !== null);
+  hasValue = computed(() => this.knownKey() !== null || this.config() !== null);
 
   agInit(params: ICellRendererParams): void {
     this.params.set(params);

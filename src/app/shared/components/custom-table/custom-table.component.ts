@@ -79,24 +79,24 @@ const LIGHT_THEME = themeQuartz.withParams({
 });
 
 const DARK_THEME = themeQuartz.withParams({
-  backgroundColor: '#0f172a',
-  foregroundColor: '#f1f5f9',
-  headerBackgroundColor: '#1a2332',
+  backgroundColor: '#172033',
+  foregroundColor: '#e6edf7',
+  headerBackgroundColor: '#111a2e',
   headerTextColor: '#cbd5e1',
   headerFontWeight: 500,
   headerFontSize: 12,
   headerHeight: 44,
   rowHeight: 48,
-  rowHoverColor: '#243246',
-  borderColor: '#334155',
-  chromeBackgroundColor: '#1e293b',
+  rowHoverColor: '#1f2b44',
+  borderColor: '#2a3654',
+  chromeBackgroundColor: '#111a2e',
   wrapperBorderRadius: 12,
   wrapperBorder: true,
   cellHorizontalPadding: 12,
   fontFamily: 'inherit',
   fontSize: 13,
   accentColor: '#60a5fa',
-  selectedRowBackgroundColor: 'rgba(96, 165, 250, 0.18)',
+  selectedRowBackgroundColor: 'rgba(96, 165, 250, 0.16)',
 });
 
 @Component({

@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
 .settings-container {
   padding: 24px;
   max-width: 800px;
@@ -10,6 +15,20 @@
 
 .settings-tabs {
   margin-top: 24px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    flex: 1;
+    min-height: 0;
+  }
+
+  ::ng-deep .mat-mdc-tab-body.mat-mdc-tab-body-active {
+    overflow-y: auto;
+    padding-right: 8px;
+  }
 }
 
 .tab-content {
@@ -103,5 +122,5 @@
 }
 
 .danger-title {
-  color: #ef4444;
+  color: var(--tm-danger);
 }

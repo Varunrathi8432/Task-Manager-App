@@ -1,4 +1,4 @@
-<div class="project-list-container">
+<div class="project-list-container page-container">
   <app-page-header title="Projects" subtitle="Organize your tasks into projects">
     <button mat-flat-button color="primary" (click)="openProjectForm()">
       <mat-icon>add</mat-icon>
@@ -15,7 +15,7 @@
       (action)="openProjectForm()"
     />
   } @else {
-    <div class="project-grid">
+    <div class="project-grid page-scroll-body">
       @for (project of projectStore.projectsWithStats(); track project.id) {
         <div class="project-card">
           <div class="card-color-bar" [style.background-color]="project.color"></div>

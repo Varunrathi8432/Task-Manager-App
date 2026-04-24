@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
-import { Chart, ChartData, registerables } from 'chart.js';
+import { Chart, ChartData, ChartOptions, registerables } from 'chart.js';
 import { MatIconModule } from '@angular/material/icon';
 import { TaskStore } from '@store/task.store';
 import { ProjectStore } from '@store/project.store';
@@ -9,6 +9,36 @@ import { ThemeService } from '@core/services/theme.service';
 import { subDays, format, parseISO } from 'date-fns';
 
 Chart.register(...registerables);
+
+type ThemePalette = {
+  text: string;
+  textMuted: string;
+  grid: string;
+  status: [string, string, string, string];
+  priority: [string, string, string, string];
+  trendLine: string;
+  trendFill: string;
+};
+
+const LIGHT_PALETTE: ThemePalette = {
+  text: '#0f172a',
+  textMuted: '#64748b',
+  grid: 'rgba(15, 23, 42, 0.08)',
+  status: ['#94a3b8', '#3b82f6', '#a855f7', '#22c55e'],
+  priority: ['#22c55e', '#f59e0b', '#ef4444', '#dc2626'],
+  trendLine: '#3b82f6',
+  trendFill: 'rgba(59, 130, 246, 0.12)',
+};
+
+const DARK_PALETTE: ThemePalette = {
+  text: '#e6edf7',
+  textMuted: '#94a3b8',
+  grid: 'rgba(230, 237, 247, 0.08)',
+  status: ['#cbd5e1', '#93c5fd', '#d8b4fe', '#86efac'],
+  priority: ['#86efac', '#fcd34d', '#fca5a5', '#f87171'],
+  trendLine: '#60a5fa',
+  trendFill: 'rgba(96, 165, 250, 0.15)',
+};
 
 @Component({
   selector: 'app-analytics',
@@ -28,9 +58,14 @@ export class AnalyticsComponent {
   completedTasks = this.taskStore.completedCount;
   overdueTasks = this.taskStore.overdueCount;
 
+  private palette = computed<ThemePalette>(() =>
+    this.themeService.isDark() ? DARK_PALETTE : LIGHT_PALETTE,
+  );
+
   // Tasks by status - doughnut chart
   statusChartData = computed<ChartData<'doughnut'>>(() => {
     const byStatus = this.taskStore.tasksByStatus();
+    const p = this.palette();
     return {
       labels: ['To Do', 'In Progress', 'Review', 'Done'],
       datasets: [{
@@ -40,7 +75,9 @@ export class AnalyticsComponent {
           byStatus['review'].length,
           byStatus['done'].length,
         ],
-        backgroundColor: ['#94a3b8', '#3b82f6', '#a855f7', '#22c55e'],
+        backgroundColor: p.status,
+        borderColor: this.themeService.isDark() ? '#172033' : '#ffffff',
+        borderWidth: 2,
       }],
     };
   });
@@ -48,6 +85,7 @@ export class AnalyticsComponent {
   // Tasks by priority - bar chart
   priorityChartData = computed<ChartData<'bar'>>(() => {
     const tasks = this.taskStore.tasks();
+    const p = this.palette();
     return {
       labels: ['Low', 'Medium', 'High', 'Critical'],
       datasets: [{
@@ -57,7 +95,8 @@ export class AnalyticsComponent {
           tasks.filter(t => t.priority === 'high').length,
           tasks.filter(t => t.priority === 'critical').length,
         ],
-        backgroundColor: ['#22c55e', '#f59e0b', '#ef4444', '#dc2626'],
+        backgroundColor: p.priority,
+        borderRadius: 4,
       }],
     };
   });
@@ -75,13 +114,16 @@ export class AnalyticsComponent {
         t.completedAt && format(parseISO(t.completedAt), 'yyyy-MM-dd') === dateStr
       ).length);
     }
+    const p = this.palette();
     return {
       labels,
       datasets: [{
         data,
         label: 'Completed',
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59,130,246,0.1)',
+        borderColor: p.trendLine,
+        backgroundColor: p.trendFill,
+        pointBackgroundColor: p.trendLine,
+        pointBorderColor: p.trendLine,
         fill: true,
         tension: 0.4,
       }],
@@ -97,27 +139,87 @@ export class AnalyticsComponent {
         data: projects.map(p => p.taskCount),
         label: 'Total Tasks',
         backgroundColor: projects.map(p => p.color),
+        borderRadius: 4,
       }],
     };
   });
 
-  doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom' as const } },
-  };
+  doughnutOptions = computed<ChartOptions<'doughnut'>>(() => {
+    const p = this.palette();
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: p.text, boxWidth: 12, boxHeight: 12, padding: 12 },
+        },
+        tooltip: {
+          backgroundColor: this.themeService.isDark() ? '#172033' : '#0f172a',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: p.grid,
+          borderWidth: 1,
+        },
+      },
+    };
+  });
 
-  barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-  };
+  barOptions = computed<ChartOptions<'bar'>>(() => {
+    const p = this.palette();
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: this.themeService.isDark() ? '#172033' : '#0f172a',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: p.grid,
+          borderWidth: 1,
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: p.textMuted },
+          grid: { color: p.grid },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, color: p.textMuted },
+          grid: { color: p.grid },
+        },
+      },
+    };
+  });
 
-  lineOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-  };
+  lineOptions = computed<ChartOptions<'line'>>(() => {
+    const p = this.palette();
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: this.themeService.isDark() ? '#172033' : '#0f172a',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: p.grid,
+          borderWidth: 1,
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: p.textMuted },
+          grid: { color: p.grid },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, color: p.textMuted },
+          grid: { color: p.grid },
+        },
+      },
+    };
+  });
 }

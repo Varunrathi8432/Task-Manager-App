@@ -17,6 +17,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  &.status-todo {
+    background: var(--status-todo-bg);
+    color: var(--status-todo-text);
+  }
+  &.status-in-progress {
+    background: var(--status-in-progress-bg);
+    color: var(--status-in-progress-text);
+  }
+  &.status-review {
+    background: var(--status-review-bg);
+    color: var(--status-review-text);
+  }
+  &.status-done {
+    background: var(--status-done-bg);
+    color: var(--status-done-text);
+  }
 }
 
 .empty {

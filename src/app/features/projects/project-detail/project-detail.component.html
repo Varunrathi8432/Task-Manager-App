@@ -1,4 +1,4 @@
-<div class="project-detail-container">
+<div class="project-detail-container page-container">
   @if (project(); as project) {
     <div class="back-nav">
       <button mat-icon-button (click)="goBack()">
@@ -39,7 +39,7 @@
       />
     </div>
 
-    <div class="tasks-section">
+    <div class="tasks-section page-scroll-body">
       <h2 class="section-title">Tasks</h2>
 
       @if (projectTasks().length === 0) {

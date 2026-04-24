@@ -1,11 +1,24 @@
 :host {
   display: block;
+  height: 100%;
 }
 
 .task-list-container {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+}
+
+app-dynamic-filter,
+.bulk-actions {
+  flex-shrink: 0;
+}
+
+app-custom-table {
+  flex: 1;
+  min-height: 0;
+  display: block;
+  overflow: hidden;
 }
 
 .search-bar {

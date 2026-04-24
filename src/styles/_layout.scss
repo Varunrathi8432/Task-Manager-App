@@ -1,0 +1,38 @@
+// ─── Page layout utilities ────────────────────────────────────────────────────
+//
+// Every routed feature page uses three building blocks:
+//   1. .page-container  — the root div; fills the shell content area as a flex column
+//   2. .page-scroll-body — the growing, scrollable content area below the fixed header
+//   3. .flex-fixed       — anything that must never shrink (back buttons, sub-headers, etc.)
+//
+// Usage pattern:
+//   <div class="feature-container page-container">
+//     <app-page-header />          ← auto flex-fixed via child selector below
+//     <div class="feature-body page-scroll-body"> ... </div>
+//   </div>
+// ─────────────────────────────────────────────────────────────────────────────
+
+.page-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  // page-header is always a fixed row — never let it shrink
+  > app-page-header {
+    flex-shrink: 0;
+  }
+}
+
+.page-scroll-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  padding-bottom: 4px;
+}
+
+// Use on any non-header row that must stay fixed height inside a flex column
+.flex-fixed {
+  flex-shrink: 0;
+}

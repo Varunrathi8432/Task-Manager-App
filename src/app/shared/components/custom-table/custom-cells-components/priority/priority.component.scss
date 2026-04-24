@@ -19,6 +19,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  &.priority-low {
+    background: var(--priority-low-bg);
+    color: var(--priority-low-text);
+  }
+  &.priority-medium {
+    background: var(--priority-medium-bg);
+    color: var(--priority-medium-text);
+  }
+  &.priority-high {
+    background: var(--priority-high-bg);
+    color: var(--priority-high-text);
+  }
+  &.priority-critical {
+    background: var(--priority-critical-bg);
+    color: var(--priority-critical-text);
+  }
 }
 
 .empty {

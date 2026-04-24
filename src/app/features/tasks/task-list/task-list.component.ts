@@ -26,20 +26,6 @@ import { ProjectCellComponent } from './cell-renderers/project-cell.component';
 const PRIORITY_ORDER: Record<TaskPriority, number> = { low: 0, medium: 1, high: 2, critical: 3 };
 const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, 'in-progress': 1, review: 2, done: 3 };
 
-const PRIORITY_COLORS = {
-  low: { label: 'Low', color: '#2e7d32', bg: '#e8f5e9' },
-  medium: { label: 'Medium', color: '#f57f17', bg: '#fff8e1' },
-  high: { label: 'High', color: '#c62828', bg: '#ffebee' },
-  critical: { label: 'Critical', color: '#ffffff', bg: '#b71c1c' },
-};
-
-const STATUS_COLORS = {
-  todo: { label: 'To Do', color: '#616161', bg: '#e0e0e0' },
-  'in-progress': { label: 'In Progress', color: '#1565c0', bg: '#e3f2fd' },
-  review: { label: 'Review', color: '#7b1fa2', bg: '#f3e5f5' },
-  done: { label: 'Done', color: '#2e7d32', bg: '#e8f5e9' },
-};
-
 @Component({
   selector: 'app-task-list',
   standalone: true,
@@ -161,7 +147,6 @@ export class TaskListComponent implements CellActionHost<Task> {
       field_value_name: 'priority',
       type: 'priority',
       width: 140,
-      cellRendererParams: { colors: PRIORITY_COLORS },
       comparator: (a, b) => PRIORITY_ORDER[a as TaskPriority] - PRIORITY_ORDER[b as TaskPriority],
     },
     {
@@ -169,7 +154,6 @@ export class TaskListComponent implements CellActionHost<Task> {
       field_value_name: 'status',
       type: 'status',
       width: 160,
-      cellRendererParams: { colors: STATUS_COLORS },
       comparator: (a, b) => STATUS_ORDER[a as TaskStatus] - STATUS_ORDER[b as TaskStatus],
     },
     {

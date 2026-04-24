@@ -1,11 +1,17 @@
 @if (hasValue()) {
-  <span
-    class="table-priority"
-    [style.background]="background()"
-    [style.color]="color()"
-    [title]="label()">
-    {{ label() }}
-  </span>
+  @if (knownKey(); as key) {
+    <span class="table-priority" [class]="'table-priority priority-' + key" [title]="label()">
+      {{ label() }}
+    </span>
+  } @else {
+    <span
+      class="table-priority"
+      [style.background]="background()"
+      [style.color]="color()"
+      [title]="label()">
+      {{ label() }}
+    </span>
+  }
 } @else {
   <span class="empty">—</span>
 }

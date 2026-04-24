@@ -1,11 +1,17 @@
 @if (hasValue()) {
-  <span
-    class="table-status"
-    [style.background]="background()"
-    [style.color]="color()"
-    [title]="label()">
-    {{ label() }}
-  </span>
+  @if (knownClass(); as cls) {
+    <span [class]="'table-status ' + cls" [title]="label()">
+      {{ label() }}
+    </span>
+  } @else {
+    <span
+      class="table-status"
+      [style.background]="background()"
+      [style.color]="color()"
+      [title]="label()">
+      {{ label() }}
+    </span>
+  }
 } @else {
   <span class="empty">—</span>
 }

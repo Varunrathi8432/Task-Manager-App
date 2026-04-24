@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
 .project-list-container {
   padding: 24px;
   max-width: 1400px;
@@ -13,6 +18,7 @@
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
   margin-top: 24px;
+  align-content: start;
 
   @media (max-width: 576px) {
     grid-template-columns: 1fr;

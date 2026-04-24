@@ -41,6 +41,7 @@ export class TaskFormComponent {
   private fb = inject(NonNullableFormBuilder);
 
   task: Task | null = null;
+  initialDueDate: Date | null = null;
 
   readonly result = new Subject<TaskFormResult>();
 
@@ -75,6 +76,8 @@ export class TaskFormComponent {
         projectId: this.task.projectId,
         labels: [...this.task.labels],
       });
+    } else if (this.initialDueDate) {
+      this.taskForm.patchValue({ dueDate: this.initialDueDate });
     }
   }
 

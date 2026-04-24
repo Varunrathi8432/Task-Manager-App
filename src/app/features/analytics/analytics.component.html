@@ -1,6 +1,7 @@
-<div class="analytics-container">
+<div class="analytics-container page-container">
   <app-page-header title="Analytics" subtitle="Insights and statistics about your tasks" />
 
+  <div class="analytics-body page-scroll-body">
   <div class="summary-cards">
     <div class="summary-card">
       <div class="card-icon-wrap blue">
@@ -50,7 +51,7 @@
         <canvas baseChart
           type="doughnut"
           [data]="statusChartData()"
-          [options]="doughnutOptions"
+          [options]="doughnutOptions()"
         ></canvas>
       </div>
     </div>
@@ -61,7 +62,7 @@
         <canvas baseChart
           type="bar"
           [data]="priorityChartData()"
-          [options]="barOptions"
+          [options]="barOptions()"
         ></canvas>
       </div>
     </div>
@@ -72,7 +73,7 @@
         <canvas baseChart
           type="line"
           [data]="trendChartData()"
-          [options]="lineOptions"
+          [options]="lineOptions()"
         ></canvas>
       </div>
     </div>
@@ -83,9 +84,10 @@
         <canvas baseChart
           type="bar"
           [data]="projectChartData()"
-          [options]="barOptions"
+          [options]="barOptions()"
         ></canvas>
       </div>
     </div>
+  </div>
   </div>
 </div>

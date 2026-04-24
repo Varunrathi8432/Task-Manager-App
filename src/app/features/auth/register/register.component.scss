@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--tm-auth-gradient);
   padding: 16px;
 }
 
@@ -73,21 +73,16 @@ mat-form-field {
 }
 
 .error-alert {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--tm-danger-soft);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   border-radius: var(--tm-radius);
   padding: 12px 16px;
   margin-bottom: 16px;
-  color: #dc2626;
+  color: var(--tm-danger);
   font-size: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.dark-theme .error-alert {
-  background: rgba(220, 38, 38, 0.1);
-  border-color: rgba(220, 38, 38, 0.3);
 }
 
 .auth-footer {

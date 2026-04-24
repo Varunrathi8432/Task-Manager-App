@@ -18,7 +18,7 @@
 .subtask-progress-label {
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -26,7 +26,7 @@
 .subtask-progress-value {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-primary, rgba(0, 0, 0, 0.87));
+  color: var(--text-primary);
 }
 
 .subtask-items {
@@ -44,7 +44,7 @@
   transition: background-color 0.15s ease;
 
   &:hover {
-    background-color: var(--hover-bg, rgba(0, 0, 0, 0.04));
+    background-color: var(--hover-bg);
 
     .subtask-remove-btn {
       opacity: 1;
@@ -54,12 +54,12 @@
 
 .subtask-completed .subtask-title {
   text-decoration: line-through;
-  color: var(--text-disabled, rgba(0, 0, 0, 0.38));
+  color: var(--text-disabled);
 }
 
 .subtask-title {
   font-size: 14px;
-  color: var(--text-primary, rgba(0, 0, 0, 0.87));
+  color: var(--text-primary);
 }
 
 .subtask-remove-btn {
@@ -80,7 +80,7 @@
   align-items: center;
   gap: 8px;
   padding-top: 8px;
-  border-top: 1px solid var(--divider, rgba(0, 0, 0, 0.12));
+  border-top: 1px solid var(--divider);
 }
 
 .subtask-input {
@@ -90,9 +90,9 @@
   font-size: 14px;
   padding: 8px 0;
   background: transparent;
-  color: var(--text-primary, rgba(0, 0, 0, 0.87));
+  color: var(--text-primary);
 
   &::placeholder {
-    color: var(--text-hint, rgba(0, 0, 0, 0.38));
+    color: var(--text-hint);
   }
 }

@@ -2,6 +2,7 @@
 @use 'styles/variables';
 @use 'styles/mixins';
 @use 'styles/modal';
+@use 'styles/layout';
 
 // Light theme
 html {
@@ -62,11 +63,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--tm-border);
+  background: var(--tm-scrollbar-thumb);
   border-radius: 3px;
 
   &:hover {
-    background: var(--tm-text-muted);
+    background: var(--tm-scrollbar-thumb-hover);
   }
 }
 
