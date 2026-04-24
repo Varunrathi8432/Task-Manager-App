@@ -3,17 +3,11 @@ import { Router } from '@angular/router';
 import { Observable, of, throwError, delay } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { StorageService } from '@core/services/storage.service';
-import { User, LoginCredentials, RegisterPayload, AuthResponse, UserPreferences } from '@core/models';
+import { User, LoginCredentials, RegisterPayload, AuthResponse } from '@core/models';
+import { getDemoUsers, DemoUser } from '@core/data';
 import { environment } from '@env/environment';
 
-interface StoredUser {
-  id: string;
-  email: string;
-  name: string;
-  password: string;
-  avatar: string;
-  preferences: UserPreferences;
-}
+type StoredUser = DemoUser;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -27,8 +21,20 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
   readonly userName = computed(() => this.currentUser()?.name ?? '');
   readonly userInitials = computed(() => {
-    const name = this.currentUser()?.name ?? '';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const user = this.currentUser();
+    if (!user) return '';
+    const name = (user.name ?? '').trim();
+    if (name) {
+      return name
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    const email = (user.email ?? '').trim();
+    return email ? email[0].toUpperCase() : '';
   });
 
   constructor() {
@@ -36,22 +42,14 @@ export class AuthService {
   }
 
   private seedDemoUser(): void {
-    const users = this.storage.get<StoredUser[]>('users');
-    if (!users || users.length === 0) {
-      this.storage.set<StoredUser[]>('users', [{
-        id: uuidv4(),
-        email: 'demo@taskmanager.com',
-        name: 'Alex Johnson',
-        password: 'password123',
-        avatar: '',
-        preferences: {
-          theme: 'light',
-          defaultView: 'list',
-          notificationsEnabled: true,
-          defaultPriority: 'medium',
-        },
-      }]);
+    // Always restore canonical demo user records so their credentials keep working
+    // even after profile edits, while preserving any user-registered accounts.
+    const existing = this.storage.get<StoredUser[]>('users') ?? [];
+    const byEmail = new Map(existing.map(u => [u.email, u]));
+    for (const seed of getDemoUsers()) {
+      byEmail.set(seed.email, seed);
     }
+    this.storage.set<StoredUser[]>('users', [...byEmail.values()]);
   }
 
   login(credentials: LoginCredentials): Observable<AuthResponse> {

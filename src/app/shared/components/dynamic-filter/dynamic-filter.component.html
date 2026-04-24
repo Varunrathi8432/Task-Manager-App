@@ -1,0 +1,63 @@
+<div class="dynamic-filter" [formGroup]="filterForm">
+  <div class="list-filter-template">
+    @for (field of visibleFields(); track field.id) {
+      @switch (field.field_type) {
+        @case ('text') {
+          <app-text-filter [group]="filterForm" [field]="field"></app-text-filter>
+        }
+        @case ('dropdown') {
+          <app-dropdown-filter [group]="filterForm" [field]="field"></app-dropdown-filter>
+        }
+        @case ('date') {
+          <app-date-filter [group]="filterForm" [field]="field"></app-date-filter>
+        }
+        @case ('ngdaterange') {
+          <app-date-range-filter [group]="filterForm" [field]="field"></app-date-range-filter>
+        }
+      }
+    }
+
+    @if (pickerList().length > 0) {
+      <div
+        class="filter-picker"
+        cdkOverlayOrigin
+        #pickerTrigger="cdkOverlayOrigin">
+        <button
+          type="button"
+          class="dropdown-toggle-filter"
+          matTooltip="Add filter"
+          (click)="togglePicker()">
+          <span class="plus">+</span>Add
+        </button>
+        <ng-template
+          cdkConnectedOverlay
+          [cdkConnectedOverlayOrigin]="pickerTrigger"
+          [cdkConnectedOverlayOpen]="pickerOpen()"
+          [cdkConnectedOverlayHasBackdrop]="true"
+          cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+          cdkConnectedOverlayPanelClass="filter-overlay-panel"
+          (overlayOutsideClick)="closePicker()"
+          (backdropClick)="closePicker()">
+          <ul class="dropdown-menu">
+            @for (filter of pickerList(); track filter.id) {
+              <li (click)="swapFilter(filter.id)">
+                <span class="label">{{ filter.label }}</span>
+              </li>
+            }
+          </ul>
+        </ng-template>
+      </div>
+    }
+  </div>
+
+  <div class="filter-settings">
+    @if (!isFilterEmpty()) {
+      <span
+        class="reset-filter"
+        matTooltip="Reset filters"
+        (click)="resetFilter()">
+        <mat-icon>close</mat-icon>Reset
+      </span>
+    }
+  </div>
+</div>

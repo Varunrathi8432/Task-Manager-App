@@ -1,6 +1,7 @@
 @use '@angular/material' as mat;
 @use 'styles/variables';
 @use 'styles/mixins';
+@use 'styles/modal';
 
 // Light theme
 html {
@@ -104,5 +105,131 @@ a {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+// Dynamic-filter popover panel (rendered in CDK overlay container, so global)
+.filter-overlay-panel {
+  margin-top: 4px;
+
+  .filter-popover {
+    min-width: 240px;
+    max-width: 360px;
+    background: var(--tm-bg-card);
+    border: 1px solid var(--tm-border);
+    border-radius: 6px;
+    box-shadow: var(--tm-overlay-shadow);
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--tm-text-primary);
+
+    .filter-info {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 6px;
+
+      .filter-clear,
+      .filter-remove {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        color: var(--tm-text-secondary);
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 4px;
+
+        &:hover {
+          background: var(--tm-bg-hover);
+          color: var(--tm-text-primary);
+        }
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          line-height: 16px;
+        }
+      }
+    }
+
+    .filter-body {
+      .form-control {
+        width: 100%;
+        padding: 8px 10px;
+        background: var(--tm-bg-primary);
+        border: 1px solid var(--tm-border);
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: inherit;
+        color: var(--tm-text-primary);
+        outline: none;
+
+        &:focus {
+          border-color: var(--tm-accent);
+        }
+      }
+
+      .option-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-height: 260px;
+        overflow-y: auto;
+
+        li {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 8px;
+          border-radius: 4px;
+          cursor: pointer;
+
+          &:hover { background: var(--tm-bg-hover); }
+          &.selected {
+            background: var(--tm-accent-soft);
+            color: var(--tm-accent-hover);
+            font-weight: 500;
+          }
+
+          input[type="checkbox"], input[type="radio"] {
+            margin: 0;
+            accent-color: var(--tm-accent);
+          }
+
+          .opt-color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+          }
+
+          .opt-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+
+      .date-range-inputs {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        input.form-control {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .separator {
+          color: var(--tm-text-secondary);
+          font-size: 12px;
+        }
+      }
+    }
   }
 }

@@ -1,0 +1,130 @@
+// Modal styles — matches the structure used in the company FC project
+// (ngx-bootstrap renders: modal-container.modal > .modal-dialog > .modal-content > <user-component>).
+
+// ----- Backdrop / container positioning -----
+
+modal-container,
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: block;
+  overflow-x: hidden;
+  overflow-y: auto;
+  outline: 0;
+}
+
+modal-container.fade,
+.modal.fade { opacity: 0; transition: opacity 0.15s linear; }
+
+modal-container.fade.show,
+.modal.fade.show { opacity: 1; }
+
+bs-modal-backdrop,
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1040;
+  display: block;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-backdrop.fade { opacity: 0; }
+.modal-backdrop.show { opacity: 1; transition: opacity 0.15s linear; }
+
+// ----- Dialog sizing -----
+// ngx-bootstrap applies the `class` option directly on `.modal-dialog`,
+// so size modifiers must target `.modal-dialog.modal-md`, not a descendant.
+
+.modal-dialog {
+  position: relative;
+  width: auto;
+  max-width: 500px;
+  margin: 1.75rem auto;
+  pointer-events: none;
+}
+
+.modal-dialog.modal-sm { max-width: 400px; }
+.modal-dialog.modal-md { max-width: 600px; }
+.modal-dialog.modal-lg { max-width: 800px; }
+.modal-dialog.modal-xl { max-width: 1140px; }
+
+// ----- Content card -----
+
+.modal-content {
+  pointer-events: auto;
+  background: var(--tm-bg-card);
+  color: var(--tm-text-primary);
+  border: 1px solid var(--tm-border);
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+// ----- Header / body / footer -----
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--tm-border);
+
+  .modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--tm-text-primary);
+  }
+
+  .close,
+  .btn-close {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--tm-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background var(--tm-transition);
+
+    &:hover {
+      background: var(--tm-bg-hover);
+      color: var(--tm-text-primary);
+    }
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.modal-body {
+  padding: 20px;
+  max-height: calc(90vh - 140px); // leave room for header + footer
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--tm-border);
+
+  &.footer-center { justify-content: center; }
+  &.footer-between { justify-content: space-between; }
+}
+
+// ----- Material CDK overlays (mat-select, datepicker, menu) must float
+// above the modal (default is z-index 1000, modal is 1050). -----
+
+.cdk-overlay-container {
+  z-index: 1060;
+}

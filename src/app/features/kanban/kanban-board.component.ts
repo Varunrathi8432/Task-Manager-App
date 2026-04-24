@@ -3,7 +3,8 @@ import { Router } from '@angular/router';
 import { CdkDragDrop, CdkDropList, CdkDrag, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { take } from 'rxjs/operators';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { TaskStore } from '@store/task.store';
@@ -30,7 +31,7 @@ export class KanbanBoardComponent {
   protected taskStore = inject(TaskStore);
   protected projectStore = inject(ProjectStore);
   private router = inject(Router);
-  private dialog = inject(MatDialog);
+  private modalService = inject(BsModalService);
 
   columns: { status: TaskStatus; label: string; icon: string }[] = [
     { status: 'todo', label: 'To Do', icon: 'radio_button_unchecked' },
@@ -101,9 +102,12 @@ export class KanbanBoardComponent {
   }
 
   openTaskForm(): void {
-    const dialogRef = this.dialog.open(TaskFormComponent, { width: '600px', data: {} });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) this.taskStore.addTask(result);
+    const modalRef = this.modalService.show(TaskFormComponent, {
+      class: 'modal-md',
+      initialState: { task: null },
+    });
+    modalRef.content?.result.pipe(take(1)).subscribe(result => {
+      this.taskStore.addTask(result);
     });
   }
 

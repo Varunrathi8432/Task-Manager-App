@@ -1,17 +1,24 @@
-<h2 mat-dialog-title>{{ data.title }}</h2>
+<div class="modal-header">
+  <h4 class="modal-title">{{ title }}</h4>
+  <button type="button" class="close" aria-label="Close" (click)="onCancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
-<mat-dialog-content>
-  <p class="dialog-message">{{ data.message }}</p>
-</mat-dialog-content>
+<div class="modal-body">
+  <p class="dialog-message">{{ message }}</p>
+</div>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="dialogRef.close(false)">
-    {{ data.cancelText || 'Cancel' }}
+<div class="modal-footer">
+  <button mat-button type="button" (click)="onCancel()">
+    {{ cancelText || 'Cancel' }}
   </button>
   <button
     mat-flat-button
-    [color]="data.warn ? 'warn' : 'primary'"
-    (click)="dialogRef.close(true)">
-    {{ data.confirmText || 'Confirm' }}
+    type="button"
+    [color]="warn ? 'warn' : 'primary'"
+    (click)="onConfirm()"
+  >
+    {{ confirmText || 'Confirm' }}
   </button>
-</mat-dialog-actions>
+</div>

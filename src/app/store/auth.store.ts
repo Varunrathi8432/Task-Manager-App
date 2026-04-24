@@ -27,8 +27,20 @@ export const AuthStore = signalStore(
     userName: computed(() => store.user()?.name ?? ''),
     userEmail: computed(() => store.user()?.email ?? ''),
     userInitials: computed(() => {
-      const name = store.user()?.name ?? '';
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      const user = store.user();
+      if (!user) return '';
+      const name = (user.name ?? '').trim();
+      if (name) {
+        return name
+          .split(/\s+/)
+          .filter(Boolean)
+          .map(n => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2);
+      }
+      const email = (user.email ?? '').trim();
+      return email ? email[0].toUpperCase() : '';
     }),
   })),
 

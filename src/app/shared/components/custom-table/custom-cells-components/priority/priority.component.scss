@@ -1,0 +1,26 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.table-priority {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  line-height: 1.5;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  color: var(--tm-text-muted, #999);
+}

@@ -7,7 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { take } from 'rxjs/operators';
 import { AuthStore } from '@store/auth.store';
 import { TaskStore } from '@store/task.store';
 import { ProjectStore } from '@store/project.store';
@@ -37,7 +38,7 @@ export class SettingsComponent {
   private projectStore = inject(ProjectStore);
   private notification = inject(NotificationService);
   private storage = inject(StorageService);
-  private dialog = inject(MatDialog);
+  private modalService = inject(BsModalService);
   private fb = inject(NonNullableFormBuilder);
 
   profileForm = this.fb.group({
@@ -64,15 +65,16 @@ export class SettingsComponent {
   }
 
   resetData(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
+    const modalRef = this.modalService.show(ConfirmDialogComponent, {
+      class: 'modal-sm',
+      initialState: {
         title: 'Reset All Data',
         message: 'This will delete all tasks, projects, and settings. This action cannot be undone.',
         confirmText: 'Reset Everything',
         warn: true,
-      } as ConfirmDialogData,
+      } satisfies ConfirmDialogData,
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    modalRef.content?.result.pipe(take(1)).subscribe(confirmed => {
       if (confirmed) {
         this.storage.clear();
         window.location.reload();

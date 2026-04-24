@@ -1,0 +1,30 @@
+<ul class="action-list">
+  @if (showDetailButton()) {
+    <li>
+      <button mat-icon-button matTooltip="More details" (click)="onDetailClick($event)">
+        <mat-icon>visibility</mat-icon>
+      </button>
+    </li>
+  }
+  @if (showEditButton()) {
+    <li>
+      <button mat-icon-button matTooltip="Edit" (click)="onEditClick($event)">
+        <mat-icon>edit</mat-icon>
+      </button>
+    </li>
+  }
+  @if (showDeleteButton()) {
+    <li>
+      <button mat-icon-button matTooltip="Delete" color="warn" (click)="onDeleteClick($event)">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </li>
+  }
+  @if (showDownloadButton()) {
+    <li>
+      <button mat-icon-button matTooltip="Download" (click)="onDownloadClick($event)">
+        <mat-icon>download</mat-icon>
+      </button>
+    </li>
+  }
+</ul>

@@ -1,26 +1,33 @@
-<h2 mat-dialog-title>{{ isEditing ? 'Edit Task' : 'Create Task' }}</h2>
+<div class="modal-header">
+  <h4 class="modal-title">{{ isEditing ? "Edit Task" : "Create Task" }}</h4>
+  <button type="button" class="close" aria-label="Close" (click)="onCancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
-<mat-dialog-content>
+<div class="modal-body">
   <form [formGroup]="taskForm" class="task-form">
-    <!-- Title -->
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Title</mat-label>
-      <input matInput formControlName="title" placeholder="Enter task title">
-      @if (taskForm.controls.title.hasError('required')) {
+      <input matInput formControlName="title" placeholder="Enter task title" />
+      @if (taskForm.controls.title.hasError("required")) {
         <mat-error>Title is required</mat-error>
       }
-      @if (taskForm.controls.title.hasError('maxlength')) {
+      @if (taskForm.controls.title.hasError("maxlength")) {
         <mat-error>Title must be 200 characters or less</mat-error>
       }
     </mat-form-field>
 
-    <!-- Description -->
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Description</mat-label>
-      <textarea matInput formControlName="description" placeholder="Enter task description" rows="4"></textarea>
+      <textarea
+        matInput
+        formControlName="description"
+        placeholder="Enter task description"
+        rows="4"
+      ></textarea>
     </mat-form-field>
 
-    <!-- Priority & Status Row -->
     <div class="form-row">
       <mat-form-field appearance="outline" class="half-width">
         <mat-label>Priority</mat-label>
@@ -28,10 +35,18 @@
           @for (p of priorities; track p) {
             <mat-option [value]="p">
               @switch (p) {
-                @case ('low') { Low }
-                @case ('medium') { Medium }
-                @case ('high') { High }
-                @case ('critical') { Critical }
+                @case ("low") {
+                  Low
+                }
+                @case ("medium") {
+                  Medium
+                }
+                @case ("high") {
+                  High
+                }
+                @case ("critical") {
+                  Critical
+                }
               }
             </mat-option>
           }
@@ -44,10 +59,18 @@
           @for (s of statuses; track s) {
             <mat-option [value]="s">
               @switch (s) {
-                @case ('todo') { To Do }
-                @case ('in-progress') { In Progress }
-                @case ('review') { Review }
-                @case ('done') { Done }
+                @case ("todo") {
+                  To Do
+                }
+                @case ("in-progress") {
+                  In Progress
+                }
+                @case ("review") {
+                  Review
+                }
+                @case ("done") {
+                  Done
+                }
               }
             </mat-option>
           }
@@ -55,12 +78,19 @@
       </mat-form-field>
     </div>
 
-    <!-- Due Date & Project Row -->
     <div class="form-row">
       <mat-form-field appearance="outline" class="half-width">
         <mat-label>Due Date</mat-label>
-        <input matInput [matDatepicker]="picker" formControlName="dueDate" placeholder="Select date">
-        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          formControlName="dueDate"
+          placeholder="Select date"
+        />
+        <mat-datepicker-toggle
+          matIconSuffix
+          [for]="picker"
+        ></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
 
@@ -71,7 +101,10 @@
           @for (project of projectStore.projects(); track project.id) {
             <mat-option [value]="project.id">
               <span class="project-option">
-                <span class="project-color-dot" [style.background]="project.color"></span>
+                <span
+                  class="project-color-dot"
+                  [style.background]="project.color"
+                ></span>
                 {{ project.name }}
               </span>
             </mat-option>
@@ -80,17 +113,25 @@
       </mat-form-field>
     </div>
 
-    <!-- Labels -->
     <div class="labels-section">
       <label class="labels-title">Labels</label>
       <div class="labels-input-row">
         <mat-form-field appearance="outline" class="label-input">
           <mat-label>Add a label</mat-label>
-          <input matInput [(ngModel)]="labelInput" [ngModelOptions]="{ standalone: true }"
-                 (keydown.enter)="addLabel(); $event.preventDefault()"
-                 placeholder="Type and press Enter">
-          <button mat-icon-button matSuffix (click)="addLabel()" type="button"
-                  [disabled]="!labelInput.trim()">
+          <input
+            matInput
+            [(ngModel)]="labelInput"
+            [ngModelOptions]="{ standalone: true }"
+            (keydown.enter)="addLabel(); $event.preventDefault()"
+            placeholder="Type and press Enter"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="addLabel()"
+            type="button"
+            [disabled]="!labelInput.trim()"
+          >
             <mat-icon>add</mat-icon>
           </button>
         </mat-form-field>
@@ -109,11 +150,17 @@
       }
     </div>
   </form>
-</mat-dialog-content>
+</div>
 
-<mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-flat-button color="primary" (click)="onSave()" [disabled]="taskForm.invalid">
-    {{ isEditing ? 'Update' : 'Create' }}
+<div class="modal-footer footer-center">
+  <button mat-button type="button" (click)="onCancel()">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="onSave()"
+    [disabled]="taskForm.invalid"
+  >
+    {{ isEditing ? "Update" : "Create" }}
   </button>
-</mat-dialog-actions>
+</div>

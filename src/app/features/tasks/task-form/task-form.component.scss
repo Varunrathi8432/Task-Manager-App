@@ -72,13 +72,3 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-
-mat-dialog-content {
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-mat-dialog-actions {
-  padding: 16px 0 0;
-  gap: 8px;
-}

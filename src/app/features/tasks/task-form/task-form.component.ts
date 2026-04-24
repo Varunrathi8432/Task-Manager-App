@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Subject } from 'rxjs';
 import { ReactiveFormsModule, FormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
-import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { BsModalRef } from 'ngx-bootstrap/modal';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -12,11 +13,21 @@ import { MatIconModule } from '@angular/material/icon';
 import { Task, TaskPriority, TaskStatus } from '@core/models';
 import { ProjectStore } from '@store/project.store';
 
+export interface TaskFormResult {
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  dueDate: string | null;
+  projectId: string | null;
+  labels: string[];
+}
+
 @Component({
   selector: 'app-task-form',
   standalone: true,
   imports: [
-    ReactiveFormsModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
+    ReactiveFormsModule, FormsModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatDatepickerModule, MatNativeDateModule,
     MatButtonModule, MatChipsModule, MatIconModule,
   ],
@@ -25,27 +36,47 @@ import { ProjectStore } from '@store/project.store';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TaskFormComponent {
-  data = inject<{ task?: Task }>(MAT_DIALOG_DATA, { optional: true });
-  dialogRef = inject(MatDialogRef<TaskFormComponent>);
+  bsModalRef = inject(BsModalRef);
   projectStore = inject(ProjectStore);
   private fb = inject(NonNullableFormBuilder);
 
-  isEditing = !!this.data?.task;
+  task: Task | null = null;
+
+  readonly result = new Subject<TaskFormResult>();
 
   taskForm = this.fb.group({
-    title: [this.data?.task?.title ?? '', [Validators.required, Validators.maxLength(200)]],
-    description: [this.data?.task?.description ?? ''],
-    priority: [(this.data?.task?.priority ?? 'medium') as TaskPriority],
-    status: [(this.data?.task?.status ?? 'todo') as TaskStatus],
-    dueDate: [this.data?.task?.dueDate ? new Date(this.data.task.dueDate) : null as Date | null],
-    projectId: [this.data?.task?.projectId ?? null as string | null],
-    labels: [this.data?.task?.labels ?? [] as string[]],
+    title: ['', [Validators.required, Validators.maxLength(200)]],
+    description: [''],
+    priority: ['medium' as TaskPriority],
+    status: ['todo' as TaskStatus],
+    dueDate: [null as Date | null],
+    projectId: [null as string | null],
+    labels: [[] as string[]],
   });
 
   priorities: TaskPriority[] = ['low', 'medium', 'high', 'critical'];
   statuses: TaskStatus[] = ['todo', 'in-progress', 'review', 'done'];
 
   labelInput = '';
+
+  get isEditing(): boolean {
+    return !!this.task;
+  }
+
+  // ngx-bootstrap sets `initialState` props before ngOnInit, so seed the form here.
+  ngOnInit(): void {
+    if (this.task) {
+      this.taskForm.patchValue({
+        title: this.task.title,
+        description: this.task.description,
+        priority: this.task.priority,
+        status: this.task.status,
+        dueDate: this.task.dueDate ? new Date(this.task.dueDate) : null,
+        projectId: this.task.projectId,
+        labels: [...this.task.labels],
+      });
+    }
+  }
 
   addLabel(): void {
     const label = this.labelInput.trim().toLowerCase();
@@ -64,10 +95,15 @@ export class TaskFormComponent {
   onSave(): void {
     if (this.taskForm.valid) {
       const value = this.taskForm.getRawValue();
-      this.dialogRef.close({
+      this.result.next({
         ...value,
         dueDate: value.dueDate ? new Date(value.dueDate).toISOString() : null,
       });
+      this.bsModalRef.hide();
     }
+  }
+
+  onCancel(): void {
+    this.bsModalRef.hide();
   }
 }

@@ -1,6 +1,11 @@
-<h2 mat-dialog-title>{{ isEditing ? 'Edit Project' : 'New Project' }}</h2>
+<div class="modal-header">
+  <h4 class="modal-title">{{ isEditing ? 'Edit Project' : 'New Project' }}</h4>
+  <button type="button" class="close" aria-label="Close" (click)="onCancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
-<mat-dialog-content>
+<div class="modal-body">
   <form [formGroup]="form" class="project-form">
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Project Name</mat-label>
@@ -39,11 +44,11 @@
       </div>
     </div>
   </form>
-</mat-dialog-content>
+</div>
 
-<mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-flat-button color="primary" [disabled]="form.invalid" (click)="onSave()">
+<div class="modal-footer">
+  <button mat-button type="button" (click)="onCancel()">Cancel</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="form.invalid" (click)="onSave()">
     {{ isEditing ? 'Update' : 'Create' }}
   </button>
-</mat-dialog-actions>
+</div>

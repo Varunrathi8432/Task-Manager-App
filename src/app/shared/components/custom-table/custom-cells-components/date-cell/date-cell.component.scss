@@ -1,0 +1,19 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.cell-value {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--tm-text-primary, #2c3032);
+
+  &.overdue {
+    color: var(--tm-priority-high, #c62828);
+    font-weight: 500;
+  }
+}

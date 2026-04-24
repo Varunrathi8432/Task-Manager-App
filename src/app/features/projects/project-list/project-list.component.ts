@@ -3,7 +3,8 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatDialog } from '@angular/material/dialog';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { take } from 'rxjs/operators';
 import { ProjectStore } from '@store/project.store';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
@@ -21,17 +22,18 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 export class ProjectListComponent {
   protected projectStore = inject(ProjectStore);
   private router = inject(Router);
-  private dialog = inject(MatDialog);
+  private modalService = inject(BsModalService);
 
   openProjectForm(project?: any): void {
-    const dialogRef = this.dialog.open(ProjectFormComponent, { width: '500px', data: { project } });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        if (project) {
-          this.projectStore.updateProject({ id: project.id, changes: result });
-        } else {
-          this.projectStore.addProject(result);
-        }
+    const modalRef = this.modalService.show(ProjectFormComponent, {
+      class: 'modal-md',
+      initialState: { project: project ?? null },
+    });
+    modalRef.content?.result.pipe(take(1)).subscribe(result => {
+      if (project) {
+        this.projectStore.updateProject({ id: project.id, changes: result });
+      } else {
+        this.projectStore.addProject(result);
       }
     });
   }
@@ -41,15 +43,16 @@ export class ProjectListComponent {
   }
 
   deleteProject(id: string, name: string): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
+    const modalRef = this.modalService.show(ConfirmDialogComponent, {
+      class: 'modal-sm',
+      initialState: {
         title: 'Delete Project',
         message: `Delete "${name}"? Tasks will remain but be unassigned.`,
         confirmText: 'Delete',
         warn: true,
-      } as ConfirmDialogData,
+      } satisfies ConfirmDialogData,
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    modalRef.content?.result.pipe(take(1)).subscribe(confirmed => {
       if (confirmed) this.projectStore.deleteProject(id);
     });
   }

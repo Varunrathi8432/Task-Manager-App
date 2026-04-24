@@ -49,12 +49,29 @@ mat-toolbar {
   border-radius: 50%;
   background: var(--tm-accent);
   color: white;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  user-select: none;
   cursor: pointer;
+  transition: transform var(--tm-transition), box-shadow var(--tm-transition);
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 2px var(--tm-bg-card), 0 0 0 3px var(--tm-accent);
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+  }
 }
 
 .header-actions {

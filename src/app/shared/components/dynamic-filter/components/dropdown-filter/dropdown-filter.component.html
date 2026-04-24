@@ -1,0 +1,51 @@
+<button
+  type="button"
+  cdkOverlayOrigin
+  #trigger="cdkOverlayOrigin"
+  class="filter-overlay-button"
+  [class.active]="isOpen()"
+  [class.filter-applied]="selectedLength() > 0"
+  (click)="toggle()">
+  <span class="control-label">
+    <span class="txt">{{ field.label }}</span>
+    @if (selectedLength() > 0) {
+      <span class="filter-count">{{ selectedLength() }}</span>
+    }
+  </span>
+  <mat-icon class="chevron" [class.open]="isOpen()">expand_more</mat-icon>
+</button>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="trigger"
+  [cdkConnectedOverlayOpen]="isOpen()"
+  [cdkConnectedOverlayHasBackdrop]="true"
+  cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+  cdkConnectedOverlayPanelClass="filter-overlay-panel"
+  (overlayOutsideClick)="close()"
+  (backdropClick)="close()">
+  <div class="filter-popover">
+    <div class="filter-info">
+      <span class="filter-clear" (click)="onClear()" matTooltip="Clear selection">
+        <mat-icon>close</mat-icon>Clear
+      </span>
+    </div>
+    <div class="filter-body">
+      <ul class="option-list">
+        @for (opt of field.items ?? []; track opt.id) {
+          <li [class.selected]="isSelected(opt)" (click)="toggleOption(opt)">
+            @if (field.isMultiple) {
+              <input type="checkbox" [checked]="isSelected(opt)" (click)="$event.stopPropagation()" (change)="toggleOption(opt)" />
+            } @else {
+              <input type="radio" [checked]="isSelected(opt)" (click)="$event.stopPropagation()" (change)="toggleOption(opt)" />
+            }
+            @if (opt.color) {
+              <span class="opt-color-dot" [style.background]="opt.color"></span>
+            }
+            <span class="opt-label">{{ opt.name }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+</ng-template>

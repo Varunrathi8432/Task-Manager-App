@@ -1,0 +1,36 @@
+<div
+  class="plain-ember"
+  [style.height]="tableHeight()"
+  [style.min-height]="minHeight()">
+  <ag-grid-angular
+    style="width: 100%; height: 100%;"
+    [theme]="appliedTheme()"
+    [rowData]="tableData() ?? []"
+    [columnDefs]="columnDefs()"
+    [defaultColDef]="defaultColDef()"
+    [context]="context()"
+    [quickFilterText]="quickFilterText()"
+    [rowSelection]="rowSelectionOption()"
+    [suppressRowClickSelection]="suppressRowClickSelection()"
+    [pagination]="pagination()"
+    [paginationPageSize]="paginationPageSize()"
+    [paginationPageSizeSelector]="paginationPageSizeSelector()"
+    [animateRows]="animateRows()"
+    [rowHeight]="rowHeight()"
+    [headerHeight]="headerHeight()"
+    [overlayNoRowsTemplate]="overlayNoRowsTemplate()"
+    (gridReady)="onGridReady($event)"
+    (selectionChanged)="onSelectionChanged($event)"
+    (rowClicked)="onRowClicked($event)"
+    (cellClicked)="handleCellClicked($event)">
+  </ag-grid-angular>
+
+  @if (selectedCount() > 0) {
+    <div class="selected-rows">
+      <span>{{ selectedCount() }}</span>
+      of
+      <span>{{ totalCount() }}</span>
+      {{ selectedCount() === 1 ? 'is' : 'are' }} selected
+    </div>
+  }
+</div>

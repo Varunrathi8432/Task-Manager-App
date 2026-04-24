@@ -5,7 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog } from '@angular/material/dialog';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { take } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { TaskStore } from '@store/task.store';
 import { ProjectStore } from '@store/project.store';
@@ -35,7 +36,7 @@ export class TaskDetailComponent {
   private taskStore = inject(TaskStore);
   private projectStore = inject(ProjectStore);
   private router = inject(Router);
-  private dialog = inject(MatDialog);
+  private modalService = inject(BsModalService);
 
   task = computed(() => this.taskStore.tasks().find(t => t.id === this.id()) ?? null);
 
@@ -81,24 +82,28 @@ export class TaskDetailComponent {
   onEdit(): void {
     const task = this.task();
     if (!task) return;
-    const dialogRef = this.dialog.open(TaskFormComponent, { width: '600px', data: { task } });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) this.taskStore.updateTask({ id: task.id, changes: result });
+    const modalRef = this.modalService.show(TaskFormComponent, {
+      class: 'modal-md',
+      initialState: { task },
+    });
+    modalRef.content?.result.pipe(take(1)).subscribe(result => {
+      this.taskStore.updateTask({ id: task.id, changes: result });
     });
   }
 
   onDelete(): void {
     const task = this.task();
     if (!task) return;
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
+    const modalRef = this.modalService.show(ConfirmDialogComponent, {
+      class: 'modal-sm',
+      initialState: {
         title: 'Delete Task',
         message: `Delete "${task.title}"?`,
         confirmText: 'Delete',
         warn: true,
-      } as ConfirmDialogData,
+      } satisfies ConfirmDialogData,
     });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    modalRef.content?.result.pipe(take(1)).subscribe(confirmed => {
       if (confirmed) {
         this.taskStore.deleteTask(task.id);
         this.router.navigate(['/tasks']);

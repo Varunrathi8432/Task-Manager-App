@@ -4,12 +4,7 @@
 
 .dialog-message {
   font-size: 14px;
-  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+  color: var(--tm-text-secondary);
   line-height: 1.6;
   margin: 0;
-}
-
-mat-dialog-actions {
-  padding: 12px 0 0;
-  gap: 8px;
 }

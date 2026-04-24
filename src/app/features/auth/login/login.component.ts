@@ -8,6 +8,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthStore } from '@store/auth.store';
+import { getPrimaryDemoUser } from '@core/data';
 
 @Component({
   selector: 'app-login',
@@ -27,9 +28,11 @@ export class LoginComponent {
   protected authStore = inject(AuthStore);
   hidePassword = signal(true);
 
+  private demoUser = getPrimaryDemoUser();
+
   loginForm = this.fb.group({
-    email: ['demo@taskmanager.com', [Validators.required, Validators.email]],
-    password: ['password123', [Validators.required, Validators.minLength(6)]],
+    email: [this.demoUser.email, [Validators.required, Validators.email]],
+    password: [this.demoUser.password, [Validators.required, Validators.minLength(6)]],
     rememberMe: [false],
   });
 

@@ -28,7 +28,11 @@
     <div class="avatar"
          [matMenuTriggerFor]="userMenu"
          matTooltip="Account">
-      {{ authStore.userInitials() }}
+      @if (authStore.userInitials(); as initials) {
+        {{ initials }}
+      } @else {
+        <mat-icon>person</mat-icon>
+      }
     </div>
 
     <mat-menu #userMenu="matMenu">

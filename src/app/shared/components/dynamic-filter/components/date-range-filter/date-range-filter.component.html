@@ -1,0 +1,49 @@
+<button
+  type="button"
+  cdkOverlayOrigin
+  #trigger="cdkOverlayOrigin"
+  class="filter-overlay-button"
+  [class.active]="isOpen()"
+  [class.filter-applied]="selectedLength() > 0"
+  (click)="toggle()">
+  <span class="control-label">
+    <span class="txt">{{ field.label }}</span>
+    @if (selectedLength() > 0) {
+      <span class="filter-count">{{ selectedLength() }}</span>
+    }
+  </span>
+  <mat-icon class="chevron" [class.open]="isOpen()">expand_more</mat-icon>
+</button>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="trigger"
+  [cdkConnectedOverlayOpen]="isOpen()"
+  [cdkConnectedOverlayHasBackdrop]="true"
+  cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+  cdkConnectedOverlayPanelClass="filter-overlay-panel"
+  (overlayOutsideClick)="close()"
+  (backdropClick)="close()">
+  <div class="filter-popover">
+    <div class="filter-info">
+      <span class="filter-clear" (click)="onClear()" matTooltip="Clear selection">
+        <mat-icon>close</mat-icon>Clear
+      </span>
+    </div>
+    <div class="filter-body">
+      <div class="date-range-inputs">
+        <input
+          type="date"
+          class="form-control"
+          [value]="range().start ?? ''"
+          (change)="onStartChange($any($event.target).value)" />
+        <span class="separator">to</span>
+        <input
+          type="date"
+          class="form-control"
+          [value]="range().end ?? ''"
+          (change)="onEndChange($any($event.target).value)" />
+      </div>
+    </div>
+  </div>
+</ng-template>
