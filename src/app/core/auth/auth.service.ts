@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signOut,
   updateProfile as fbUpdateProfile,
   User as FirebaseUser,
@@ -125,6 +126,14 @@ export class AuthService {
       }),
       catchError(err => throwError(() => this.wrapError(err))),
     );
+  }
+
+  async resetPassword(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(this.auth, email);
+    } catch (err) {
+      throw this.wrapError(err);
+    }
   }
 
   async resendVerification(email: string, password: string): Promise<void> {

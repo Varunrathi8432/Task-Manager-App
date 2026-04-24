@@ -106,6 +106,22 @@ export const AuthStore = signalStore(
           )),
         )
       ),
+      forgotPassword: rxMethod<string>(
+        pipe(
+          tap(() => patchState(store, { loading: true, error: null, errorCode: null })),
+          switchMap(email => from(authService.resetPassword(email)).pipe(
+            tap(() => {
+              patchState(store, { loading: false });
+              notification.success('Password reset email sent. Check your inbox.', 6000);
+              router.navigate(['/auth/login']);
+            }),
+            catchError((err: Error) => {
+              patchState(store, { loading: false, error: err.message });
+              return EMPTY;
+            }),
+          )),
+        )
+      ),
       logout(): void {
         authService.logout();
         patchState(store, { user: null, error: null, errorCode: null });
