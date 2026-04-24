@@ -1,195 +1,227 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, from, throwError, defer } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import { MockApiService } from './mock-api.service';
-import { StorageService } from './storage.service';
+import {
+  Firestore, collection, doc, getDoc, getDocs, query, where, orderBy,
+  addDoc, updateDoc, deleteDoc, writeBatch, setDoc,
+} from '@angular/fire/firestore';
+import { Auth } from '@angular/fire/auth';
 import {
   Task, CreateTaskPayload, UpdateTaskPayload,
-  TaskStatus, ActivityLogEntry, Subtask
+  TaskStatus, Subtask,
 } from '@core/models';
 
 @Injectable({ providedIn: 'root' })
-export class TaskApiService extends MockApiService {
-  private storage = inject(StorageService);
-  private readonly STORAGE_KEY = 'tasks';
+export class TaskApiService {
+  private firestore = inject(Firestore);
+  private auth = inject(Auth);
 
-  private getTasks_(): Task[] {
-    return this.storage.get<Task[]>(this.STORAGE_KEY) ?? [];
+  private tasksCol() {
+    const uid = this.requireUid();
+    return collection(this.firestore, `users/${uid}/tasks`);
   }
 
-  private saveTasks(tasks: Task[]): void {
-    this.storage.set(this.STORAGE_KEY, tasks);
+  private taskDoc(id: string) {
+    const uid = this.requireUid();
+    return doc(this.firestore, `users/${uid}/tasks/${id}`);
+  }
+
+  private requireUid(): string {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) throw new Error('Not authenticated');
+    return uid;
   }
 
   getTasks(): Observable<Task[]> {
-    return this.simulateDelay(this.getTasks_());
+    return defer(async () => {
+      const snap = await getDocs(query(this.tasksCol(), orderBy('order')));
+      return snap.docs.map(d => ({ ...(d.data() as Task), id: d.id }));
+    });
   }
 
   getTaskById(id: string): Observable<Task> {
-    const task = this.getTasks_().find(t => t.id === id);
-    if (!task) return this.simulateError('Task not found');
-    return this.simulateDelay(task);
+    return defer(async () => {
+      const snap = await getDoc(this.taskDoc(id));
+      if (!snap.exists()) throw new Error('Task not found');
+      return { ...(snap.data() as Task), id: snap.id };
+    });
   }
 
   createTask(payload: CreateTaskPayload): Observable<Task> {
-    const tasks = this.getTasks_();
-    const now = new Date().toISOString();
-    const status = payload.status ?? 'todo';
-    const maxOrder = tasks.filter(t => t.status === status)
-      .reduce((max, t) => Math.max(max, t.order), -1);
-
-    const task: Task = {
-      id: uuidv4(),
-      title: payload.title,
-      description: payload.description,
-      status,
-      priority: payload.priority,
-      dueDate: payload.dueDate,
-      labels: payload.labels ?? [],
-      subtasks: (payload.subtasks ?? []).map(s => ({
-        id: uuidv4(),
-        title: s.title,
-        completed: false,
-      })),
-      attachments: [],
-      activityLog: [{
-        id: uuidv4(),
-        taskId: '',
-        action: 'created',
-        details: 'Task created',
-        timestamp: now,
-        userId: 'current-user',
-      }],
-      projectId: payload.projectId,
-      assigneeId: null,
-      createdAt: now,
-      updatedAt: now,
-      completedAt: null,
-      order: maxOrder + 1,
-    };
-    task.activityLog[0].taskId = task.id;
-
-    tasks.push(task);
-    this.saveTasks(tasks);
-    return this.simulateDelay(task);
+    return defer(async () => {
+      const all = await getDocs(query(this.tasksCol(), where('status', '==', payload.status ?? 'todo')));
+      const maxOrder = all.docs.reduce((max, d) => Math.max(max, (d.data() as Task).order ?? -1), -1);
+      const now = new Date().toISOString();
+      const id = uuidv4();
+      const task: Task = {
+        id,
+        title: payload.title,
+        description: payload.description,
+        status: payload.status ?? 'todo',
+        priority: payload.priority,
+        dueDate: payload.dueDate,
+        labels: payload.labels ?? [],
+        subtasks: (payload.subtasks ?? []).map(s => ({
+          id: uuidv4(),
+          title: s.title,
+          completed: false,
+        })),
+        attachments: [],
+        activityLog: [{
+          id: uuidv4(),
+          taskId: id,
+          action: 'created',
+          details: 'Task created',
+          timestamp: now,
+          userId: this.requireUid(),
+        }],
+        projectId: payload.projectId,
+        assigneeId: null,
+        createdAt: now,
+        updatedAt: now,
+        completedAt: null,
+        order: maxOrder + 1,
+      };
+      await setDoc(this.taskDoc(id), task);
+      return task;
+    });
   }
 
   updateTask(id: string, payload: UpdateTaskPayload): Observable<Task> {
-    const tasks = this.getTasks_();
-    const index = tasks.findIndex(t => t.id === id);
-    if (index === -1) return this.simulateError('Task not found');
+    return defer(async () => {
+      const snap = await getDoc(this.taskDoc(id));
+      if (!snap.exists()) throw new Error('Task not found');
+      const existing = snap.data() as Task;
 
-    const now = new Date().toISOString();
-    const existing = tasks[index];
-    const changes: string[] = [];
+      const now = new Date().toISOString();
+      const changes: string[] = [];
+      if (payload.status && payload.status !== existing.status) {
+        changes.push(`Status changed from "${existing.status}" to "${payload.status}"`);
+      }
+      if (payload.priority && payload.priority !== existing.priority) {
+        changes.push(`Priority changed from "${existing.priority}" to "${payload.priority}"`);
+      }
 
-    if (payload.status && payload.status !== existing.status) {
-      changes.push(`Status changed from "${existing.status}" to "${payload.status}"`);
-    }
-    if (payload.priority && payload.priority !== existing.priority) {
-      changes.push(`Priority changed from "${existing.priority}" to "${payload.priority}"`);
-    }
-
-    const updated: Task = {
-      ...existing,
-      ...payload,
-      updatedAt: now,
-      completedAt: payload.status === 'done' && !existing.completedAt
-        ? now
-        : payload.status !== 'done' ? null : existing.completedAt,
-      activityLog: [
-        ...existing.activityLog,
-        ...changes.map(detail => ({
-          id: uuidv4(),
-          taskId: id,
-          action: 'updated',
-          details: detail,
-          timestamp: now,
-          userId: 'current-user',
-        })),
-      ],
-    };
-
-    tasks[index] = updated;
-    this.saveTasks(tasks);
-    return this.simulateDelay(updated);
+      const updated: Task = {
+        ...existing,
+        ...payload,
+        id,
+        updatedAt: now,
+        completedAt: payload.status === 'done' && !existing.completedAt
+          ? now
+          : payload.status !== 'done' && payload.status !== undefined ? null : existing.completedAt,
+        activityLog: [
+          ...existing.activityLog,
+          ...changes.map(detail => ({
+            id: uuidv4(),
+            taskId: id,
+            action: 'updated',
+            details: detail,
+            timestamp: now,
+            userId: this.requireUid(),
+          })),
+        ],
+      };
+      await setDoc(this.taskDoc(id), updated);
+      return updated;
+    });
   }
 
   deleteTask(id: string): Observable<void> {
-    const tasks = this.getTasks_().filter(t => t.id !== id);
-    this.saveTasks(tasks);
-    return this.simulateDelay(undefined as void);
+    return from(deleteDoc(this.taskDoc(id)));
   }
 
   deleteTasks(ids: string[]): Observable<void> {
-    const idSet = new Set(ids);
-    const tasks = this.getTasks_().filter(t => !idSet.has(t.id));
-    this.saveTasks(tasks);
-    return this.simulateDelay(undefined as void);
+    return defer(async () => {
+      const batch = writeBatch(this.firestore);
+      for (const id of ids) {
+        batch.delete(this.taskDoc(id));
+      }
+      await batch.commit();
+    });
   }
 
   reorderTasks(updates: { id: string; order: number; status?: TaskStatus }[]): Observable<Task[]> {
-    const tasks = this.getTasks_();
-    const now = new Date().toISOString();
+    return defer(async () => {
+      const now = new Date().toISOString();
+      const uid = this.requireUid();
+      const batch = writeBatch(this.firestore);
+      const results: Task[] = [];
 
-    for (const update of updates) {
-      const task = tasks.find(t => t.id === update.id);
-      if (task) {
+      for (const update of updates) {
+        const ref = this.taskDoc(update.id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) continue;
+        const task = snap.data() as Task;
+
         if (update.status && update.status !== task.status) {
-          task.activityLog.push({
-            id: uuidv4(),
-            taskId: task.id,
-            action: 'moved',
-            details: `Moved from "${task.status}" to "${update.status}"`,
-            timestamp: now,
-            userId: 'current-user',
-          });
+          task.activityLog = [
+            ...task.activityLog,
+            {
+              id: uuidv4(),
+              taskId: task.id,
+              action: 'moved',
+              details: `Moved from "${task.status}" to "${update.status}"`,
+              timestamp: now,
+              userId: uid,
+            },
+          ];
           task.status = update.status;
           task.completedAt = update.status === 'done' ? now : null;
         }
         task.order = update.order;
         task.updatedAt = now;
+        batch.set(ref, task);
+        results.push(task);
       }
-    }
 
-    this.saveTasks(tasks);
-    return this.simulateDelay(tasks);
+      await batch.commit();
+      return results;
+    });
   }
 
   addSubtask(taskId: string, title: string): Observable<Task> {
-    const tasks = this.getTasks_();
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return this.simulateError('Task not found');
+    return defer(async () => {
+      const ref = this.taskDoc(taskId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) throw new Error('Task not found');
+      const task = snap.data() as Task;
 
-    const subtask: Subtask = { id: uuidv4(), title, completed: false };
-    task.subtasks.push(subtask);
-    task.updatedAt = new Date().toISOString();
-    this.saveTasks(tasks);
-    return this.simulateDelay(task);
+      const subtask: Subtask = { id: uuidv4(), title, completed: false };
+      task.subtasks = [...task.subtasks, subtask];
+      task.updatedAt = new Date().toISOString();
+      await setDoc(ref, task);
+      return task;
+    });
   }
 
   toggleSubtask(taskId: string, subtaskId: string): Observable<Task> {
-    const tasks = this.getTasks_();
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return this.simulateError('Task not found');
+    return defer(async () => {
+      const ref = this.taskDoc(taskId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) throw new Error('Task not found');
+      const task = snap.data() as Task;
 
-    const subtask = task.subtasks.find(s => s.id === subtaskId);
-    if (subtask) {
-      subtask.completed = !subtask.completed;
+      task.subtasks = task.subtasks.map(s =>
+        s.id === subtaskId ? { ...s, completed: !s.completed } : s
+      );
       task.updatedAt = new Date().toISOString();
-    }
-    this.saveTasks(tasks);
-    return this.simulateDelay(task);
+      await setDoc(ref, task);
+      return task;
+    });
   }
 
   removeSubtask(taskId: string, subtaskId: string): Observable<Task> {
-    const tasks = this.getTasks_();
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return this.simulateError('Task not found');
+    return defer(async () => {
+      const ref = this.taskDoc(taskId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) throw new Error('Task not found');
+      const task = snap.data() as Task;
 
-    task.subtasks = task.subtasks.filter(s => s.id !== subtaskId);
-    task.updatedAt = new Date().toISOString();
-    this.saveTasks(tasks);
-    return this.simulateDelay(task);
+      task.subtasks = task.subtasks.filter(s => s.id !== subtaskId);
+      task.updatedAt = new Date().toISOString();
+      await setDoc(ref, task);
+      return task;
+    });
   }
 }

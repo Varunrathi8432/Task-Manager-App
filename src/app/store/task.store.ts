@@ -1,8 +1,9 @@
-import { computed, inject } from '@angular/core';
+import { computed, effect, inject } from '@angular/core';
 import { signalStore, withState, withComputed, withMethods, withHooks, patchState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap, catchError, EMPTY } from 'rxjs';
 import { TaskApiService } from '@core/services/task-api.service';
+import { AuthService } from '@core/auth/auth.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Task, TaskStatus, TaskPriority, CreateTaskPayload, UpdateTaskPayload } from '@core/models';
 import { isAfter, isBefore, parseISO, startOfDay, endOfDay, subDays, format } from 'date-fns';
@@ -299,7 +300,14 @@ export const TaskStore = signalStore(
 
   withHooks({
     onInit(store) {
-      store.loadTasks();
+      const authService = inject(AuthService);
+      effect(() => {
+        if (authService.isAuthenticated()) {
+          store.loadTasks();
+        } else {
+          patchState(store, { tasks: [] });
+        }
+      });
     },
   }),
 );

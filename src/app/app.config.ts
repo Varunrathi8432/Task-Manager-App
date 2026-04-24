@@ -1,14 +1,15 @@
 import { ApplicationConfig, inject, importProvidersFrom, provideZoneChangeDetection, APP_INITIALIZER } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withViewTransitions, withInMemoryScrolling } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideAuth, getAuth } from '@angular/fire/auth';
+import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { routes } from './app.routes';
-import { authInterceptor } from '@core/interceptors/auth.interceptor';
-import { errorInterceptor } from '@core/interceptors/error.interceptor';
 import { AuthService } from '@core/auth/auth.service';
-import { SeedDataService } from '@core/services/seed-data.service';
 import { ThemeService } from '@core/services/theme.service';
+import { environment } from '@env/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,20 +21,19 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'top' }),
     ),
     provideAnimationsAsync(),
-    provideHttpClient(
-      withInterceptors([authInterceptor, errorInterceptor]),
-    ),
+    provideHttpClient(),
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideAuth(() => getAuth()),
+    provideFirestore(() => getFirestore()),
     importProvidersFrom(ModalModule.forRoot()),
     {
       provide: APP_INITIALIZER,
       useFactory: () => {
-        const seedService = inject(SeedDataService);
         const authService = inject(AuthService);
         const themeService = inject(ThemeService);
-        return () => {
-          seedService.seedIfEmpty();
-          authService.checkAuthStatus();
+        return async () => {
           themeService.initTheme();
+          await authService.init();
         };
       },
       multi: true,

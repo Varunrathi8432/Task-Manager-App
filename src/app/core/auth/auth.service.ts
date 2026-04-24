@@ -1,21 +1,51 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, of, throwError, delay } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
-import { StorageService } from '@core/services/storage.service';
-import { User, LoginCredentials, RegisterPayload, AuthResponse } from '@core/models';
-import { getDemoUsers, DemoUser } from '@core/data';
-import { environment } from '@env/environment';
+import {
+  Auth,
+  user as firebaseUser$,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+  updateProfile as fbUpdateProfile,
+  User as FirebaseUser,
+} from '@angular/fire/auth';
+import { Firestore, doc, getDoc, setDoc, updateDoc } from '@angular/fire/firestore';
+import { Observable, from, switchMap, catchError, throwError, firstValueFrom } from 'rxjs';
+import { User, UserPreferences, LoginCredentials, RegisterPayload, AuthResponse } from '@core/models';
 
-type StoredUser = DemoUser;
+const DEFAULT_PREFS: UserPreferences = {
+  theme: 'light',
+  defaultView: 'list',
+  notificationsEnabled: true,
+  defaultPriority: 'medium',
+};
+
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  'auth/invalid-credential': 'Invalid email or password',
+  'auth/invalid-email': 'Invalid email address',
+  'auth/user-not-found': 'Invalid email or password',
+  'auth/wrong-password': 'Invalid email or password',
+  'auth/email-already-in-use': 'Email already registered',
+  'auth/weak-password': 'Password is too weak (min 6 characters)',
+  'auth/network-request-failed': 'Network error — check your connection',
+  'auth/too-many-requests': 'Too many attempts. Try again later.',
+};
+
+export const ERR_EMAIL_NOT_VERIFIED = 'auth/email-not-verified';
+
+export interface RegistrationResult {
+  verificationSent: true;
+  email: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private storage = inject(StorageService);
+  private auth = inject(Auth);
+  private firestore = inject(Firestore);
   private router = inject(Router);
 
   private currentUser = signal<User | null>(null);
-  private tokenExpiryTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly user = this.currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
@@ -37,160 +67,138 @@ export class AuthService {
     return email ? email[0].toUpperCase() : '';
   });
 
-  constructor() {
-    this.seedDemoUser();
-  }
-
-  private seedDemoUser(): void {
-    // Always restore canonical demo user records so their credentials keep working
-    // even after profile edits, while preserving any user-registered accounts.
-    const existing = this.storage.get<StoredUser[]>('users') ?? [];
-    const byEmail = new Map(existing.map(u => [u.email, u]));
-    for (const seed of getDemoUsers()) {
-      byEmail.set(seed.email, seed);
+  async init(): Promise<void> {
+    const stream = firebaseUser$(this.auth);
+    // Wait for first emission so guards see the correct state on app boot.
+    const firstUser = await firstValueFrom(stream);
+    if (firstUser && firstUser.emailVerified) {
+      this.currentUser.set(await this.loadOrCreateProfile(firstUser));
+    } else if (firstUser && !firstUser.emailVerified) {
+      // Persisted session but unverified — sign out so guards reject.
+      await signOut(this.auth);
     }
-    this.storage.set<StoredUser[]>('users', [...byEmail.values()]);
+    stream.subscribe(async (fbUser) => {
+      if (!fbUser || !fbUser.emailVerified) {
+        this.currentUser.set(null);
+        return;
+      }
+      this.currentUser.set(await this.loadOrCreateProfile(fbUser));
+    });
   }
 
   login(credentials: LoginCredentials): Observable<AuthResponse> {
-    const users = this.storage.get<StoredUser[]>('users') ?? [];
-    const user = users.find(u => u.email === credentials.email && u.password === credentials.password);
-
-    if (!user) {
-      return throwError(() => new Error('Invalid email or password')).pipe(delay(environment.apiDelay));
-    }
-
-    const { password: _, ...safeUser } = user;
-    const { token, expiresAt } = this.generateMockToken(safeUser);
-
-    if (credentials.rememberMe) {
-      this.storage.set(environment.tokenKey, token);
-      this.storage.set('token_expiry', expiresAt);
-    } else {
-      sessionStorage.setItem(environment.storagePrefix + environment.tokenKey, token);
-      sessionStorage.setItem(environment.storagePrefix + 'token_expiry', expiresAt);
-    }
-
-    this.storage.set('current_user', safeUser);
-    this.currentUser.set(safeUser);
-    this.startExpiryTimer(expiresAt);
-
-    return of({ token, expiresAt, user: safeUser }).pipe(delay(environment.apiDelay));
+    return from(signInWithEmailAndPassword(this.auth, credentials.email, credentials.password)).pipe(
+      switchMap(async cred => {
+        if (!cred.user.emailVerified) {
+          await sendEmailVerification(cred.user);
+          await signOut(this.auth);
+          const err = new Error(
+            'Please verify your email before logging in. A fresh verification link has been sent to your inbox.',
+          );
+          (err as Error & { code: string }).code = ERR_EMAIL_NOT_VERIFIED;
+          throw err;
+        }
+        const user = await this.loadOrCreateProfile(cred.user);
+        this.currentUser.set(user);
+        const token = await cred.user.getIdToken();
+        return { token, expiresAt: '', user } as AuthResponse;
+      }),
+      catchError(err => throwError(() => this.wrapError(err))),
+    );
   }
 
-  register(payload: RegisterPayload): Observable<AuthResponse> {
-    const users = this.storage.get<StoredUser[]>('users') ?? [];
+  register(payload: RegisterPayload): Observable<RegistrationResult> {
+    return from(createUserWithEmailAndPassword(this.auth, payload.email, payload.password)).pipe(
+      switchMap(async cred => {
+        await fbUpdateProfile(cred.user, { displayName: payload.name });
+        const profile: User = {
+          id: cred.user.uid,
+          email: payload.email,
+          name: payload.name,
+          avatar: '',
+          preferences: { ...DEFAULT_PREFS },
+        };
+        await setDoc(doc(this.firestore, `users/${cred.user.uid}`), profile);
+        await sendEmailVerification(cred.user);
+        await signOut(this.auth);
+        return { verificationSent: true as const, email: payload.email };
+      }),
+      catchError(err => throwError(() => this.wrapError(err))),
+    );
+  }
 
-    if (users.some(u => u.email === payload.email)) {
-      return throwError(() => new Error('Email already registered')).pipe(delay(environment.apiDelay));
+  async resendVerification(email: string, password: string): Promise<void> {
+    try {
+      const cred = await signInWithEmailAndPassword(this.auth, email, password);
+      if (cred.user.emailVerified) {
+        await signOut(this.auth);
+        throw new Error('This email is already verified. You can sign in now.');
+      }
+      await sendEmailVerification(cred.user);
+      await signOut(this.auth);
+    } catch (err) {
+      throw this.wrapError(err);
     }
-
-    const newUser: StoredUser = {
-      id: uuidv4(),
-      email: payload.email,
-      name: payload.name,
-      password: payload.password,
-      avatar: '',
-      preferences: {
-        theme: 'light',
-        defaultView: 'list',
-        notificationsEnabled: true,
-        defaultPriority: 'medium',
-      },
-    };
-
-    users.push(newUser);
-    this.storage.set('users', users);
-
-    const { password: _, ...safeUser } = newUser;
-    const { token, expiresAt } = this.generateMockToken(safeUser);
-
-    this.storage.set(environment.tokenKey, token);
-    this.storage.set('token_expiry', expiresAt);
-    this.storage.set('current_user', safeUser);
-    this.currentUser.set(safeUser);
-    this.startExpiryTimer(expiresAt);
-
-    return of({ token, expiresAt, user: safeUser }).pipe(delay(environment.apiDelay));
   }
 
   logout(): void {
-    this.clearExpiryTimer();
-    this.currentUser.set(null);
-    this.storage.remove(environment.tokenKey);
-    this.storage.remove('token_expiry');
-    this.storage.remove('current_user');
-    sessionStorage.removeItem(environment.storagePrefix + environment.tokenKey);
-    sessionStorage.removeItem(environment.storagePrefix + 'token_expiry');
-    this.router.navigate(['/auth/login']);
+    signOut(this.auth).finally(() => {
+      this.currentUser.set(null);
+      this.router.navigate(['/auth/login']);
+    });
   }
 
   checkAuthStatus(): void {
-    const token = this.getToken();
-    const expiresAt = this.storage.get<string>('token_expiry')
-      ?? sessionStorage.getItem(environment.storagePrefix + 'token_expiry');
-
-    if (token && expiresAt && new Date(expiresAt) > new Date()) {
-      const user = this.storage.get<User>('current_user');
-      if (user) {
-        this.currentUser.set(user);
-        this.startExpiryTimer(expiresAt);
-      }
-    } else {
-      this.logout();
-    }
+    // Firebase persists sessions; init() installs the state listener at app start.
   }
 
-  getToken(): string | null {
-    return this.storage.get<string>(environment.tokenKey)
-      ?? sessionStorage.getItem(environment.storagePrefix + environment.tokenKey);
+  getToken(): Promise<string | null> {
+    return this.auth.currentUser?.getIdToken() ?? Promise.resolve(null);
   }
 
-  updateProfile(updates: Partial<User>): void {
+  async updateProfile(updates: Partial<User>): Promise<void> {
     const user = this.currentUser();
-    if (!user) return;
+    const fbUser = this.auth.currentUser;
+    if (!user || !fbUser) return;
 
-    const updated = { ...user, ...updates };
-    this.currentUser.set(updated);
-    this.storage.set('current_user', updated);
-
-    const users = this.storage.get<StoredUser[]>('users') ?? [];
-    const index = users.findIndex(u => u.id === user.id);
-    if (index >= 0) {
-      users[index] = { ...users[index], ...updates } as StoredUser;
-      this.storage.set('users', users);
+    if (updates.name && updates.name !== user.name) {
+      await fbUpdateProfile(fbUser, { displayName: updates.name });
     }
+
+    await updateDoc(doc(this.firestore, `users/${user.id}`), { ...updates });
+    this.currentUser.set({ ...user, ...updates });
   }
 
-  private generateMockToken(user: User): { token: string; expiresAt: string } {
-    const expiresAt = new Date(
-      Date.now() + environment.tokenExpiryMinutes * 60 * 1000
-    ).toISOString();
-
-    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-    const payload = btoa(JSON.stringify({
-      sub: user.id,
-      email: user.email,
-      name: user.name,
-      exp: new Date(expiresAt).getTime() / 1000,
-    }));
-    const signature = btoa('mock-signature');
-
-    return { token: `${header}.${payload}.${signature}`, expiresAt };
+  private async loadOrCreateProfile(fbUser: FirebaseUser): Promise<User> {
+    const ref = doc(this.firestore, `users/${fbUser.uid}`);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const data = snap.data() as Partial<User>;
+      return {
+        id: fbUser.uid,
+        email: fbUser.email ?? data.email ?? '',
+        name: data.name ?? fbUser.displayName ?? '',
+        avatar: data.avatar ?? '',
+        preferences: { ...DEFAULT_PREFS, ...(data.preferences ?? {}) },
+      };
+    }
+    const profile: User = {
+      id: fbUser.uid,
+      email: fbUser.email ?? '',
+      name: fbUser.displayName ?? '',
+      avatar: '',
+      preferences: { ...DEFAULT_PREFS },
+    };
+    await setDoc(ref, profile);
+    return profile;
   }
 
-  private startExpiryTimer(expiresAt: string): void {
-    this.clearExpiryTimer();
-    const msUntilExpiry = new Date(expiresAt).getTime() - Date.now();
-    if (msUntilExpiry > 0) {
-      this.tokenExpiryTimer = setTimeout(() => this.logout(), msUntilExpiry);
-    }
-  }
-
-  private clearExpiryTimer(): void {
-    if (this.tokenExpiryTimer) {
-      clearTimeout(this.tokenExpiryTimer);
-      this.tokenExpiryTimer = null;
-    }
+  private wrapError(err: unknown): Error {
+    const code = (err as { code?: string })?.code;
+    if (code === ERR_EMAIL_NOT_VERIFIED) return err as Error;
+    const message = (code && AUTH_ERROR_MESSAGES[code]) ?? (err as Error)?.message ?? 'Authentication failed';
+    const wrapped = new Error(message);
+    if (code) (wrapped as Error & { code: string }).code = code;
+    return wrapped;
   }
 }

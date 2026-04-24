@@ -1,64 +1,78 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, from, defer } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import { MockApiService } from './mock-api.service';
-import { StorageService } from './storage.service';
+import {
+  Firestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc,
+} from '@angular/fire/firestore';
+import { Auth } from '@angular/fire/auth';
 import { Project, CreateProjectPayload, UpdateProjectPayload } from '@core/models';
 
 @Injectable({ providedIn: 'root' })
-export class ProjectApiService extends MockApiService {
-  private storage = inject(StorageService);
-  private readonly STORAGE_KEY = 'projects';
+export class ProjectApiService {
+  private firestore = inject(Firestore);
+  private auth = inject(Auth);
 
-  private getProjects_(): Project[] {
-    return this.storage.get<Project[]>(this.STORAGE_KEY) ?? [];
+  private projectsCol() {
+    return collection(this.firestore, `users/${this.requireUid()}/projects`);
   }
 
-  private saveProjects(projects: Project[]): void {
-    this.storage.set(this.STORAGE_KEY, projects);
+  private projectDoc(id: string) {
+    return doc(this.firestore, `users/${this.requireUid()}/projects/${id}`);
+  }
+
+  private requireUid(): string {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) throw new Error('Not authenticated');
+    return uid;
   }
 
   getProjects(): Observable<Project[]> {
-    return this.simulateDelay(this.getProjects_());
+    return defer(async () => {
+      const snap = await getDocs(this.projectsCol());
+      return snap.docs.map(d => ({ ...(d.data() as Project), id: d.id }));
+    });
   }
 
   getProjectById(id: string): Observable<Project> {
-    const project = this.getProjects_().find(p => p.id === id);
-    if (!project) return this.simulateError('Project not found');
-    return this.simulateDelay(project);
+    return defer(async () => {
+      const snap = await getDoc(this.projectDoc(id));
+      if (!snap.exists()) throw new Error('Project not found');
+      return { ...(snap.data() as Project), id: snap.id };
+    });
   }
 
   createProject(payload: CreateProjectPayload): Observable<Project> {
-    const projects = this.getProjects_();
-    const now = new Date().toISOString();
-    const project: Project = {
-      id: uuidv4(),
-      ...payload,
-      createdAt: now,
-      updatedAt: now,
-    };
-    projects.push(project);
-    this.saveProjects(projects);
-    return this.simulateDelay(project);
+    return defer(async () => {
+      const id = uuidv4();
+      const now = new Date().toISOString();
+      const project: Project = {
+        id,
+        ...payload,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await setDoc(this.projectDoc(id), project);
+      return project;
+    });
   }
 
   updateProject(id: string, payload: UpdateProjectPayload): Observable<Project> {
-    const projects = this.getProjects_();
-    const index = projects.findIndex(p => p.id === id);
-    if (index === -1) return this.simulateError('Project not found');
-
-    projects[index] = {
-      ...projects[index],
-      ...payload,
-      updatedAt: new Date().toISOString(),
-    };
-    this.saveProjects(projects);
-    return this.simulateDelay(projects[index]);
+    return defer(async () => {
+      const snap = await getDoc(this.projectDoc(id));
+      if (!snap.exists()) throw new Error('Project not found');
+      const existing = snap.data() as Project;
+      const updated: Project = {
+        ...existing,
+        ...payload,
+        id,
+        updatedAt: new Date().toISOString(),
+      };
+      await setDoc(this.projectDoc(id), updated);
+      return updated;
+    });
   }
 
   deleteProject(id: string): Observable<void> {
-    const projects = this.getProjects_().filter(p => p.id !== id);
-    this.saveProjects(projects);
-    return this.simulateDelay(undefined as void);
+    return from(deleteDoc(this.projectDoc(id)));
   }
 }

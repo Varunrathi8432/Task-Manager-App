@@ -14,7 +14,6 @@ import { TaskStore } from '@store/task.store';
 import { ProjectStore } from '@store/project.store';
 import { ThemeService } from '@core/services/theme.service';
 import { NotificationService } from '@core/services/notification.service';
-import { StorageService } from '@core/services/storage.service';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { tasksToCSV, downloadFile } from '@shared/utils/export-utils';
@@ -37,7 +36,6 @@ export class SettingsComponent {
   private taskStore = inject(TaskStore);
   private projectStore = inject(ProjectStore);
   private notification = inject(NotificationService);
-  private storage = inject(StorageService);
   private modalService = inject(BsModalService);
   private fb = inject(NonNullableFormBuilder);
 
@@ -75,10 +73,14 @@ export class SettingsComponent {
       } satisfies ConfirmDialogData,
     });
     modalRef.content?.result.pipe(take(1)).subscribe(confirmed => {
-      if (confirmed) {
-        this.storage.clear();
-        window.location.reload();
+      if (!confirmed) return;
+      const taskIds = this.taskStore.tasks().map(t => t.id);
+      const projectIds = this.projectStore.projects().map(p => p.id);
+      this.taskStore.deleteTasks(taskIds);
+      for (const id of projectIds) {
+        this.projectStore.deleteProject(id);
       }
+      this.notification.success('All data deleted');
     });
   }
 }

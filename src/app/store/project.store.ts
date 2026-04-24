@@ -1,8 +1,9 @@
-import { computed, inject } from '@angular/core';
+import { computed, effect, inject } from '@angular/core';
 import { signalStore, withState, withComputed, withMethods, withHooks, patchState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap, catchError, EMPTY } from 'rxjs';
 import { ProjectApiService } from '@core/services/project-api.service';
+import { AuthService } from '@core/auth/auth.service';
 import { NotificationService } from '@core/services/notification.service';
 import { TaskStore } from './task.store';
 import { Project, CreateProjectPayload, UpdateProjectPayload } from '@core/models';
@@ -113,7 +114,14 @@ export const ProjectStore = signalStore(
 
   withHooks({
     onInit(store) {
-      store.loadProjects();
+      const authService = inject(AuthService);
+      effect(() => {
+        if (authService.isAuthenticated()) {
+          store.loadProjects();
+        } else {
+          patchState(store, { projects: [] });
+        }
+      });
     },
   }),
 );

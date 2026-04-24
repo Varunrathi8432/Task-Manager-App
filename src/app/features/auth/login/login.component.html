@@ -9,15 +9,23 @@
     <p>Sign in to your account</p>
   </div>
 
-  <div class="demo-hint">
-    Demo credentials pre-filled. Just click <strong>Sign In</strong>!
-  </div>
-
   @if (authStore.error()) {
-    <div class="error-alert">
-      <mat-icon>error_outline</mat-icon>
+    <div class="error-alert" [class.warn-alert]="authStore.emailVerificationRequired()">
+      <mat-icon>{{ authStore.emailVerificationRequired() ? 'mark_email_read' : 'error_outline' }}</mat-icon>
       <span>{{ authStore.error() }}</span>
     </div>
+    @if (authStore.emailVerificationRequired()) {
+      <button
+        mat-stroked-button
+        type="button"
+        class="resend-btn"
+        [disabled]="authStore.loading() || !canResend()"
+        (click)="resendVerification()"
+      >
+        <mat-icon>send</mat-icon>
+        Resend verification email
+      </button>
+    }
   }
 
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
