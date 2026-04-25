@@ -1,5 +1,8 @@
 <div class="project-list-container page-container">
-  <app-page-header title="Projects" subtitle="Organize your tasks into projects">
+  <app-page-header
+    title="Projects"
+    subtitle="Organize your tasks into projects"
+  >
     <button mat-flat-button color="primary" (click)="openProjectForm()">
       <mat-icon>add</mat-icon>
       New Project
@@ -15,60 +18,80 @@
       (action)="openProjectForm()"
     />
   } @else {
-    <div class="project-grid page-scroll-body">
-      @for (project of projectStore.projectsWithStats(); track project.id) {
-        <div class="project-card">
-          <div class="card-color-bar" [style.background-color]="project.color"></div>
+    <div class="projects-body page-scroll-body">
+      <div class="project-grid">
+        @for (project of projectStore.projectsWithStats(); track project.id) {
+          <div class="project-card">
+            <div
+              class="card-color-bar"
+              [style.background-color]="project.color"
+            ></div>
 
-          <div class="card-content">
-            <div class="card-header">
-              <h3 class="project-name">{{ project.name }}</h3>
-              <div class="card-actions">
-                <button mat-icon-button (click)="openProjectForm(project); $event.stopPropagation()">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button (click)="deleteProject(project.id, project.name); $event.stopPropagation()">
-                  <mat-icon>delete_outline</mat-icon>
-                </button>
+            <div class="card-content">
+              <div class="card-header">
+                <h3 class="project-name">{{ project.name }}</h3>
+                <div class="card-actions">
+                  <button
+                    mat-icon-button
+                    (click)="openProjectForm(project); $event.stopPropagation()"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    (click)="
+                      deleteProject(project.id, project.name);
+                      $event.stopPropagation()
+                    "
+                  >
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
               </div>
+
+              @if (project.description) {
+                <p class="project-description">{{ project.description }}</p>
+              }
+
+              <div class="project-stats">
+                <div class="stat">
+                  <mat-icon class="stat-icon">task_alt</mat-icon>
+                  <span class="stat-value">{{ project.taskCount }}</span>
+                  <span class="stat-label">tasks</span>
+                </div>
+                <div class="stat">
+                  <mat-icon class="stat-icon">check_circle</mat-icon>
+                  <span class="stat-value">{{ project.completedCount }}</span>
+                  <span class="stat-label">done</span>
+                </div>
+              </div>
+
+              <div class="progress-section">
+                <div class="progress-header">
+                  <span class="progress-label">Progress</span>
+                  <span class="progress-value">{{ project.progress }}%</span>
+                </div>
+                <mat-progress-bar
+                  mode="determinate"
+                  [value]="project.progress"
+                  [style.--mdc-linear-progress-active-indicator-color]="
+                    project.color
+                  "
+                />
+              </div>
+
+              <button
+                mat-stroked-button
+                class="open-btn"
+                (click)="navigateToProject(project.id)"
+              >
+                <mat-icon>open_in_new</mat-icon>
+                View Project
+              </button>
             </div>
-
-            @if (project.description) {
-              <p class="project-description">{{ project.description }}</p>
-            }
-
-            <div class="project-stats">
-              <div class="stat">
-                <mat-icon class="stat-icon">task_alt</mat-icon>
-                <span class="stat-value">{{ project.taskCount }}</span>
-                <span class="stat-label">tasks</span>
-              </div>
-              <div class="stat">
-                <mat-icon class="stat-icon">check_circle</mat-icon>
-                <span class="stat-value">{{ project.completedCount }}</span>
-                <span class="stat-label">done</span>
-              </div>
-            </div>
-
-            <div class="progress-section">
-              <div class="progress-header">
-                <span class="progress-label">Progress</span>
-                <span class="progress-value">{{ project.progress }}%</span>
-              </div>
-              <mat-progress-bar
-                mode="determinate"
-                [value]="project.progress"
-                [style.--mdc-linear-progress-active-indicator-color]="project.color"
-              />
-            </div>
-
-            <button mat-stroked-button class="open-btn" (click)="navigateToProject(project.id)">
-              <mat-icon>open_in_new</mat-icon>
-              View Project
-            </button>
           </div>
-        </div>
-      }
+        }
+      </div>
     </div>
   }
 </div>

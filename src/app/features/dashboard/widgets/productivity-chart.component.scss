@@ -1,4 +1,11 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .chart-container {
-  height: 250px;
+  flex: 1;
+  min-height: 200px;
   position: relative;
 }

@@ -26,3 +26,14 @@
   border-radius: var(--tm-radius-lg);
   padding: 24px;
 }
+
+.chart-area {
+  display: flex;
+  flex-direction: column;
+
+  app-productivity-chart {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+}
