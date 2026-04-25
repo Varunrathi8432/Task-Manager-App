@@ -4,7 +4,7 @@
 export const environment = {
   production: true,
   storagePrefix: 'tm_',
-  devCredentials: null,
+  devCredentials: null as { email: string; password: string } | null,
   firebase: {
     apiKey: 'AIzaSyBmPRKNUA3ynE1-4_vC_dYpItGK33Zc7qc',
     authDomain: 'task-manager-app-8e35c.firebaseapp.com',
