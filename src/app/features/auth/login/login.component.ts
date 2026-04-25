@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,6 +8,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthStore } from '@store/auth.store';
+import { environment } from '@env/environment';
 
 @Component({
   selector: 'app-login',
@@ -21,7 +22,7 @@ import { AuthStore } from '@store/auth.store';
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private fb = inject(NonNullableFormBuilder);
   private route = inject(ActivatedRoute);
   protected authStore = inject(AuthStore);
@@ -32,6 +33,17 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
     rememberMe: [false],
   });
+
+  ngOnInit(): void {
+    if (environment.devCredentials) {
+      this.loginForm.setValue({
+        email: environment.devCredentials.email,
+        password: environment.devCredentials.password,
+        rememberMe: false,
+      });
+      this.onSubmit();
+    }
+  }
 
   canResend(): boolean {
     const { email, password } = this.loginForm.getRawValue();

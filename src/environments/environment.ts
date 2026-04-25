@@ -3,6 +3,10 @@
 export const environment = {
   production: false,
   storagePrefix: 'tm_',
+  devCredentials: {
+    email: 'varun@yopmail.com',
+    password: 'Test@123',
+  },
   firebase: {
     apiKey: 'AIzaSyBmPRKNUA3ynE1-4_vC_dYpItGK33Zc7qc',
     authDomain: 'task-manager-app-8e35c.firebaseapp.com',
