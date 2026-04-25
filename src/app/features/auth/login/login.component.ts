@@ -8,6 +8,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthStore } from '@store/auth.store';
+import { AuthService } from '@core/auth/auth.service';
 import { environment } from '@env/environment';
 
 @Component({
@@ -25,6 +26,7 @@ import { environment } from '@env/environment';
 export class LoginComponent implements OnInit {
   private fb = inject(NonNullableFormBuilder);
   private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
   protected authStore = inject(AuthStore);
   hidePassword = signal(true);
 
@@ -42,6 +44,11 @@ export class LoginComponent implements OnInit {
         rememberMe: false,
       });
       this.onSubmit();
+      return;
+    }
+    const rememberedEmail = this.authService.getRememberedEmail();
+    if (rememberedEmail) {
+      this.loginForm.patchValue({ email: rememberedEmail, rememberMe: true });
     }
   }
 

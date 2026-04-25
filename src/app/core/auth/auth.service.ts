@@ -7,16 +7,21 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
+  setPersistence,
   signOut,
   updateProfile as fbUpdateProfile,
   User as FirebaseUser,
 } from '@angular/fire/auth';
+import { browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { Firestore, doc, getDoc, setDoc, updateDoc } from '@angular/fire/firestore';
 import { Observable, from, switchMap, catchError, throwError, firstValueFrom } from 'rxjs';
 import {
   User, UserPreferences, LoginCredentials,
   RegisterPayload, AuthResponse, RegisterResponse,
 } from '@core/models';
+import { StorageService } from '@core/services/storage.service';
+
+const REMEMBERED_EMAIL_KEY = 'rememberedEmail';
 
 const DEFAULT_PREFS: UserPreferences = {
   theme: 'light',
@@ -41,6 +46,7 @@ export class AuthService {
   private auth = inject(Auth);
   private firestore = inject(Firestore);
   private router = inject(Router);
+  private storage = inject(StorageService);
 
   private currentUser = signal<User | null>(null);
 
@@ -80,11 +86,19 @@ export class AuthService {
   }
 
   login(credentials: LoginCredentials): Observable<AuthResponse> {
-    return from(signInWithEmailAndPassword(this.auth, credentials.email, credentials.password)).pipe(
+    const persistence = credentials.rememberMe ? browserLocalPersistence : browserSessionPersistence;
+    return from(setPersistence(this.auth, persistence).then(() =>
+      signInWithEmailAndPassword(this.auth, credentials.email, credentials.password)
+    )).pipe(
       switchMap(async cred => {
         if (!cred.user.emailVerified) {
           await signOut(this.auth);
           throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
+        }
+        if (credentials.rememberMe) {
+          this.storage.set(REMEMBERED_EMAIL_KEY, credentials.email);
+        } else {
+          this.storage.remove(REMEMBERED_EMAIL_KEY);
         }
         const user = await this.loadOrCreateProfile(cred.user);
         this.currentUser.set(user);
@@ -93,6 +107,10 @@ export class AuthService {
       }),
       catchError(err => throwError(() => new Error(this.friendlyError(err)))),
     );
+  }
+
+  getRememberedEmail(): string | null {
+    return this.storage.get<string>(REMEMBERED_EMAIL_KEY);
   }
 
   register(payload: RegisterPayload): Observable<RegisterResponse> {
