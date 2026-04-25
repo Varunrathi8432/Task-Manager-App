@@ -6,7 +6,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,7 +27,7 @@ export interface TaskFormResult {
   standalone: true,
   imports: [
     ReactiveFormsModule, FormsModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatDatepickerModule, MatNativeDateModule,
+    MatSelectModule, MatDatepickerModule,
     MatButtonModule, MatChipsModule, MatIconModule,
   ],
   templateUrl: './task-form.component.html',
