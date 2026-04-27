@@ -9,6 +9,7 @@ import {
   effect,
   OnInit,
   OnDestroy,
+  AfterViewInit,
 } from '@angular/core';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
@@ -27,6 +28,13 @@ import type {
   FilterSubmitEvent,
 } from './dynamic-filter.types';
 
+interface StoredFilterEntry {
+  filterFormData?: FilterFormData;
+  hiddenFilters?: string[];
+}
+
+const FILTER_STORAGE_ROOT_KEY = 'filter_store';
+
 @Component({
   selector: 'app-dynamic-filter',
   standalone: true,
@@ -44,7 +52,7 @@ import type {
   styleUrl: './dynamic-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DynamicFilterComponent implements OnInit, OnDestroy {
+export class DynamicFilterComponent implements OnInit, OnDestroy, AfterViewInit {
   private fb = inject(FormBuilder);
   private filterService = inject(DynamicFilterService);
 
@@ -52,6 +60,7 @@ export class DynamicFilterComponent implements OnInit, OnDestroy {
   filterFormData = input<FilterFormData>({});
   isStaticFilter = input<boolean>(false);
   isLineView = input<boolean>(false);
+  localStorageKey = input<string | undefined>(undefined);
 
   whenFilterSubmit = output<FilterSubmitEvent>();
 
@@ -77,6 +86,7 @@ export class DynamicFilterComponent implements OnInit, OnDestroy {
   isFilterEmpty = computed(() => this.filterService.isEmpty(this.formValue(), this.fieldsArray()));
 
   private destroy$ = new Subject<void>();
+  private pendingStoredFormData: FilterFormData | null = null;
 
   constructor() {
     effect(() => {
@@ -93,9 +103,19 @@ export class DynamicFilterComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadFromLocalStorage();
     this.filterForm.valueChanges
       .pipe(debounceTime(150), takeUntil(this.destroy$))
       .subscribe(() => this.submitFilter());
+  }
+
+  ngAfterViewInit(): void {
+    if (!this.pendingStoredFormData) return;
+    Object.entries(this.pendingStoredFormData).forEach(([key, value]) => {
+      const ctrl = this.filterForm.get(key);
+      if (ctrl) ctrl.setValue(value);
+    });
+    this.pendingStoredFormData = null;
   }
 
   ngOnDestroy(): void {
@@ -108,6 +128,7 @@ export class DynamicFilterComponent implements OnInit, OnDestroy {
     this.formValue.set({ ...formValue });
     const queryParams = this.filterService.buildQueryParams(formValue, this.fieldsArray());
     this.whenFilterSubmit.emit({ filterFormData: formValue, queryParams });
+    this.saveToLocalStorage();
   }
 
   resetFilter(): void {
@@ -128,6 +149,7 @@ export class DynamicFilterComponent implements OnInit, OnDestroy {
       return next;
     });
     this.pickerOpen.set(false);
+    this.saveToLocalStorage();
   }
 
   hideFilter(filterId: string): void {
@@ -136,8 +158,41 @@ export class DynamicFilterComponent implements OnInit, OnDestroy {
       next.add(filterId);
       return next;
     });
+    this.saveToLocalStorage();
   }
 
   togglePicker(): void { this.pickerOpen.update(v => !v); }
   closePicker(): void { this.pickerOpen.set(false); }
+
+  private loadFromLocalStorage(): void {
+    const key = this.localStorageKey();
+    if (!key) return;
+    try {
+      const raw = localStorage.getItem(FILTER_STORAGE_ROOT_KEY);
+      if (!raw) return;
+      const store = JSON.parse(raw) as Record<string, StoredFilterEntry>;
+      const saved = store[key];
+      if (!saved) return;
+      if (saved.hiddenFilters?.length) {
+        this.hiddenFilters.set(new Set(saved.hiddenFilters));
+      }
+      if (saved.filterFormData) {
+        this.pendingStoredFormData = saved.filterFormData;
+      }
+    } catch {}
+  }
+
+  private saveToLocalStorage(): void {
+    const key = this.localStorageKey();
+    if (!key) return;
+    try {
+      const raw = localStorage.getItem(FILTER_STORAGE_ROOT_KEY);
+      const store = (raw ? JSON.parse(raw) : {}) as Record<string, StoredFilterEntry>;
+      store[key] = {
+        filterFormData: this.formValue(),
+        hiddenFilters: Array.from(this.hiddenFilters()),
+      };
+      localStorage.setItem(FILTER_STORAGE_ROOT_KEY, JSON.stringify(store));
+    } catch {}
+  }
 }
