@@ -89,6 +89,17 @@ body {
   background: #d97706 !important;
 }
 
+// Disabled button cursor
+button:disabled,
+button[disabled],
+[mat-button]:disabled,
+[mat-raised-button]:disabled,
+[mat-flat-button]:disabled,
+[mat-stroked-button]:disabled {
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+}
+
 // Global link styling
 a {
   color: var(--tm-accent);
