@@ -9,10 +9,6 @@
   @include mixins.page-container;
 }
 
-.projects-body {
-  padding-top: 24px;
-}
-
 .project-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

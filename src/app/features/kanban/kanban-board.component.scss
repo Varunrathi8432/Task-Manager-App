@@ -1,4 +1,4 @@
-@use 'styles/mixins' as mixins;
+@use "styles/mixins" as mixins;
 
 :host {
   display: block;
@@ -13,7 +13,6 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
   flex-shrink: 0;
 }
 
@@ -89,7 +88,9 @@
   padding: 12px;
   margin-bottom: 8px;
   cursor: grab;
-  transition: box-shadow 200ms ease, transform 200ms ease;
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease;
   border-left: 3px solid transparent;
 
   &:hover {

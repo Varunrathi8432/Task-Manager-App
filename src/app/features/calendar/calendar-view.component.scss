@@ -1,4 +1,4 @@
-@use 'styles/mixins' as mixins;
+@use "styles/mixins" as mixins;
 
 .calendar-container {
   height: 100%;
@@ -9,7 +9,6 @@
 }
 
 .calendar-wrapper {
-  margin-top: 24px;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
@@ -62,7 +61,9 @@
     text-transform: capitalize;
     font-weight: 500;
     box-shadow: none;
-    transition: background var(--tm-transition), color var(--tm-transition);
+    transition:
+      background var(--tm-transition),
+      color var(--tm-transition);
   }
 
   .fc .fc-button:focus,

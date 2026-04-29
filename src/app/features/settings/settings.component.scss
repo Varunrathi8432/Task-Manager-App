@@ -1,4 +1,4 @@
-@use 'styles/mixins' as mixins;
+@use "styles/mixins" as mixins;
 
 :host {
   display: block;
@@ -10,7 +10,6 @@
 }
 
 .settings-tabs {
-  margin-top: 24px;
   flex: 1;
   min-height: 0;
   display: flex;
