@@ -1,4 +1,15 @@
-import { Component, ChangeDetectionStrategy, Input, OnInit, HostBinding, signal, computed, inject } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  Input,
+  OnInit,
+  HostBinding,
+  signal,
+  computed,
+  inject,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,17 +19,25 @@ import type { DateRangeValue, FilterField } from '../../dynamic-filter.types';
 @Component({
   selector: 'app-date-range-filter',
   standalone: true,
-  imports: [ReactiveFormsModule, OverlayModule, MatIconModule, MatTooltipModule],
+  imports: [
+    ReactiveFormsModule,
+    OverlayModule,
+    MatIconModule,
+    MatTooltipModule,
+  ],
   templateUrl: './date-range-filter.component.html',
   styleUrl: './date-range-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DateRangeFilterComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
   @Input({ required: true }) group!: FormGroup;
   @Input({ required: true }) field!: FilterField;
-  @HostBinding('attr.id') get hostId() { return this.field?.id; }
+  @HostBinding('attr.id') get hostId() {
+    return this.field?.id;
+  }
   @HostBinding('class') hostClass = 'app-btn';
 
   isOpen = signal(false);
@@ -37,12 +56,18 @@ export class DateRangeFilterComponent implements OnInit {
     const ctrl = this.group.get(this.field.name);
     if (ctrl) {
       this.range.set(ctrl.value ?? empty);
-      ctrl.valueChanges.subscribe(v => this.range.set(v ?? empty));
+      ctrl.valueChanges
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((v) => this.range.set(v ?? empty));
     }
   }
 
-  toggle(): void { this.isOpen.update(v => !v); }
-  close(): void { this.isOpen.set(false); }
+  toggle(): void {
+    this.isOpen.update((v) => !v);
+  }
+  close(): void {
+    this.isOpen.set(false);
+  }
 
   onStartChange(value: string): void {
     const ctrl = this.group.get(this.field.name);

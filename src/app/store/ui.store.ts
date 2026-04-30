@@ -1,6 +1,13 @@
-import { inject } from '@angular/core';
+import { DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { signalStore, withState, withMethods, withHooks, patchState } from '@ngrx/signals';
+import {
+  signalStore,
+  withState,
+  withMethods,
+  withHooks,
+  patchState,
+} from '@ngrx/signals';
 
 export interface UiState {
   sidebarCollapsed: boolean;
@@ -36,8 +43,11 @@ export const UiStore = signalStore(
   withHooks({
     onInit(store) {
       const breakpointObserver = inject(BreakpointObserver);
-      breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
-        .subscribe(result => {
+      const destroyRef = inject(DestroyRef);
+      breakpointObserver
+        .observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
+        .pipe(takeUntilDestroyed(destroyRef))
+        .subscribe((result) => {
           store.setMobile(result.matches);
         });
     },

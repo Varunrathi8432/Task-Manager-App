@@ -4,8 +4,10 @@ import {
   signal,
   computed,
   EnvironmentInjector,
+  DestroyRef,
   runInInjectionContext,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import {
   Auth,
@@ -32,6 +34,7 @@ import {
 } from '@angular/fire/firestore';
 import {
   Observable,
+  Subscription,
   from,
   switchMap,
   catchError,
@@ -75,7 +78,9 @@ export class AuthService {
   private router = inject(Router);
   private storage = inject(StorageService);
   private injector = inject(EnvironmentInjector);
+  private destroyRef = inject(DestroyRef);
 
+  private authSub: Subscription | null = null;
   private currentUser = signal<User | null>(null);
 
   readonly user = this.currentUser.asReadonly();
@@ -104,13 +109,16 @@ export class AuthService {
     if (firstUser?.emailVerified) {
       this.currentUser.set(await this.loadOrCreateProfile(firstUser));
     }
-    stream.subscribe(async (fbUser) => {
-      if (!fbUser || !fbUser.emailVerified) {
-        this.currentUser.set(null);
-        return;
-      }
-      this.currentUser.set(await this.loadOrCreateProfile(fbUser));
-    });
+    this.authSub?.unsubscribe();
+    this.authSub = stream
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(async (fbUser) => {
+        if (!fbUser || !fbUser.emailVerified) {
+          this.currentUser.set(null);
+          return;
+        }
+        this.currentUser.set(await this.loadOrCreateProfile(fbUser));
+      });
   }
 
   login(credentials: LoginCredentials): Observable<AuthResponse> {

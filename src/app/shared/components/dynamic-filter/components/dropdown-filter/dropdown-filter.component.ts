@@ -1,4 +1,15 @@
-import { Component, ChangeDetectionStrategy, Input, OnInit, HostBinding, signal, computed, inject } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  Input,
+  OnInit,
+  HostBinding,
+  signal,
+  computed,
+  inject,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,17 +19,25 @@ import type { FilterField, FilterOption } from '../../dynamic-filter.types';
 @Component({
   selector: 'app-dropdown-filter',
   standalone: true,
-  imports: [ReactiveFormsModule, OverlayModule, MatIconModule, MatTooltipModule],
+  imports: [
+    ReactiveFormsModule,
+    OverlayModule,
+    MatIconModule,
+    MatTooltipModule,
+  ],
   templateUrl: './dropdown-filter.component.html',
   styleUrl: './dropdown-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DropdownFilterComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
   @Input({ required: true }) group!: FormGroup;
   @Input({ required: true }) field!: FilterField;
-  @HostBinding('attr.id') get hostId() { return this.field?.id; }
+  @HostBinding('attr.id') get hostId() {
+    return this.field?.id;
+  }
   @HostBinding('class') hostClass = 'app-btn';
 
   isOpen = signal(false);
@@ -39,12 +58,14 @@ export class DropdownFilterComponent implements OnInit {
     const ctrl = this.group.get(this.field.name);
     if (ctrl) {
       this.selected.set(ctrl.value ?? initial);
-      ctrl.valueChanges.subscribe(v => this.selected.set(v ?? initial));
+      ctrl.valueChanges
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((v) => this.selected.set(v ?? initial));
     }
   }
 
   toggle(): void {
-    this.isOpen.update(v => !v);
+    this.isOpen.update((v) => !v);
   }
 
   close(): void {
@@ -75,6 +96,8 @@ export class DropdownFilterComponent implements OnInit {
   }
 
   onClear(): void {
-    this.group.get(this.field.name)?.setValue(this.field.isMultiple ? [] : null);
+    this.group
+      .get(this.field.name)
+      ?.setValue(this.field.isMultiple ? [] : null);
   }
 }

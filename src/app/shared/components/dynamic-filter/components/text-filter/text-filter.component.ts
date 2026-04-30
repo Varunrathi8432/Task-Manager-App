@@ -1,4 +1,15 @@
-import { Component, ChangeDetectionStrategy, Input, OnInit, HostBinding, signal, computed, inject } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  Input,
+  OnInit,
+  HostBinding,
+  signal,
+  computed,
+  inject,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,17 +19,25 @@ import type { FilterField } from '../../dynamic-filter.types';
 @Component({
   selector: 'app-text-filter',
   standalone: true,
-  imports: [ReactiveFormsModule, OverlayModule, MatIconModule, MatTooltipModule],
+  imports: [
+    ReactiveFormsModule,
+    OverlayModule,
+    MatIconModule,
+    MatTooltipModule,
+  ],
   templateUrl: './text-filter.component.html',
   styleUrl: './text-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TextFilterComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
   @Input({ required: true }) group!: FormGroup;
   @Input({ required: true }) field!: FilterField;
-  @HostBinding('attr.id') get hostId() { return this.field?.id; }
+  @HostBinding('attr.id') get hostId() {
+    return this.field?.id;
+  }
   @HostBinding('class') hostClass = 'app-btn';
 
   isOpen = signal(false);
@@ -33,12 +52,14 @@ export class TextFilterComponent implements OnInit {
     const ctrl = this.group.get(this.field.name);
     if (ctrl) {
       this.inputValue.set(ctrl.value ?? '');
-      ctrl.valueChanges.subscribe(v => this.inputValue.set(v ?? ''));
+      ctrl.valueChanges
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((v) => this.inputValue.set(v ?? ''));
     }
   }
 
   toggle(): void {
-    this.isOpen.update(v => !v);
+    this.isOpen.update((v) => !v);
   }
 
   close(): void {
