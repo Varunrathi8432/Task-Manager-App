@@ -1,6 +1,13 @@
 import { computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { signalStore, withState, withComputed, withMethods, withHooks, patchState } from '@ngrx/signals';
+import {
+  signalStore,
+  withState,
+  withComputed,
+  withMethods,
+  withHooks,
+  patchState,
+} from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap, catchError, EMPTY } from 'rxjs';
 import { AuthService } from '@core/auth/auth.service';
@@ -35,11 +42,16 @@ export const AuthStore = signalStore(
       if (!user) return '';
       const name = (user.name ?? '').trim();
       if (name) {
-        return name.split(/\s+/).filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        return name
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((n) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2);
       }
       return (user.email ?? '').trim()[0]?.toUpperCase() ?? '';
     }),
-    emailVerificationRequired: computed(() => store.emailVerificationRequired()),
   })),
 
   withMethods((store) => {
@@ -49,81 +61,121 @@ export const AuthStore = signalStore(
     return {
       login: rxMethod<LoginCredentials & { returnUrl?: string }>(
         pipe(
-          tap(() => patchState(store, { loading: true, error: null, emailVerificationRequired: false })),
-          switchMap(creds => authService.login(creds).pipe(
-            tap(response => {
-              patchState(store, { user: response.user, loading: false, error: null });
-              router.navigateByUrl(creds.returnUrl ?? '/dashboard');
+          tap(() =>
+            patchState(store, {
+              loading: true,
+              error: null,
+              emailVerificationRequired: false,
             }),
-            catchError(err => {
-              const isVerificationError = err.message?.includes('verify your email');
-              patchState(store, {
-                loading: false,
-                error: err.message,
-                emailVerificationRequired: isVerificationError,
-              });
-              return EMPTY;
-            }),
-          )),
-        )
+          ),
+          switchMap((creds) =>
+            authService.login(creds).pipe(
+              tap((response) => {
+                patchState(store, {
+                  user: response.user,
+                  loading: false,
+                  error: null,
+                });
+                router.navigateByUrl(creds.returnUrl ?? '/dashboard');
+              }),
+              catchError((err) => {
+                const isVerificationError =
+                  err.message?.includes('verify your email');
+                patchState(store, {
+                  loading: false,
+                  error: err.message,
+                  emailVerificationRequired: isVerificationError,
+                });
+                return EMPTY;
+              }),
+            ),
+          ),
+        ),
       ),
 
       register: rxMethod<RegisterPayload>(
         pipe(
-          tap(() => patchState(store, { loading: true, error: null, successMessage: null })),
-          switchMap(payload => authService.register(payload).pipe(
-            tap(res => {
-              patchState(store, { loading: false, successMessage: res.message });
+          tap(() =>
+            patchState(store, {
+              loading: true,
+              error: null,
+              successMessage: null,
             }),
-            catchError(err => {
-              patchState(store, { loading: false, error: err.message });
-              return EMPTY;
-            }),
-          )),
-        )
+          ),
+          switchMap((payload) =>
+            authService.register(payload).pipe(
+              tap((res) => {
+                patchState(store, {
+                  loading: false,
+                  successMessage: res.message,
+                });
+              }),
+              catchError((err) => {
+                patchState(store, { loading: false, error: err.message });
+                return EMPTY;
+              }),
+            ),
+          ),
+        ),
       ),
 
       resendVerification: rxMethod<{ email: string; password: string }>(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
-          switchMap(({ email, password }) => authService.resendVerificationEmail(email, password).pipe(
-            tap(() => {
-              patchState(store, {
-                loading: false,
-                error: null,
-                successMessage: 'Verification email sent! Check your inbox.',
-                emailVerificationRequired: false,
-              });
-            }),
-            catchError(err => {
-              patchState(store, { loading: false, error: err.message });
-              return EMPTY;
-            }),
-          )),
-        )
+          switchMap(({ email, password }) =>
+            authService.resendVerificationEmail(email, password).pipe(
+              tap(() => {
+                patchState(store, {
+                  loading: false,
+                  error: null,
+                  successMessage: 'Verification email sent! Check your inbox.',
+                  emailVerificationRequired: false,
+                });
+              }),
+              catchError((err) => {
+                patchState(store, { loading: false, error: err.message });
+                return EMPTY;
+              }),
+            ),
+          ),
+        ),
       ),
 
       forgotPassword: rxMethod<string>(
         pipe(
-          tap(() => patchState(store, { loading: true, error: null, successMessage: null })),
-          switchMap(email => authService.sendPasswordReset(email).pipe(
-            tap(() => {
-              patchState(store, {
-                loading: false,
-                successMessage: 'Password reset email sent! Check your inbox.',
-              });
+          tap(() =>
+            patchState(store, {
+              loading: true,
+              error: null,
+              successMessage: null,
             }),
-            catchError(err => {
-              patchState(store, { loading: false, error: err.message });
-              return EMPTY;
-            }),
-          )),
-        )
+          ),
+          switchMap((email) =>
+            authService.sendPasswordReset(email).pipe(
+              tap(() => {
+                patchState(store, {
+                  loading: false,
+                  successMessage:
+                    'Password reset email sent! Check your inbox.',
+                });
+              }),
+              catchError((err) => {
+                patchState(store, { loading: false, error: err.message });
+                return EMPTY;
+              }),
+            ),
+          ),
+        ),
       ),
 
       logout(): void {
         authService.logout();
-        patchState(store, { user: null, error: null, successMessage: null, emailVerificationRequired: false });
+        patchState(store, {
+          user: null,
+          error: null,
+          successMessage: null,
+          emailVerificationRequired: false,
+        });
       },
 
       checkSession(): void {

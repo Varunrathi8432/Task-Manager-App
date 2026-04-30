@@ -1,4 +1,11 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import {
+  Injectable,
+  inject,
+  signal,
+  computed,
+  EnvironmentInjector,
+  runInInjectionContext,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import {
   Auth,
@@ -12,12 +19,32 @@ import {
   updateProfile as fbUpdateProfile,
   User as FirebaseUser,
 } from '@angular/fire/auth';
-import { browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
-import { Firestore, doc, getDoc, setDoc, updateDoc } from '@angular/fire/firestore';
-import { Observable, from, switchMap, catchError, throwError, firstValueFrom } from 'rxjs';
 import {
-  User, UserPreferences, LoginCredentials,
-  RegisterPayload, AuthResponse, RegisterResponse,
+  browserLocalPersistence,
+  browserSessionPersistence,
+} from 'firebase/auth';
+import {
+  Firestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+} from '@angular/fire/firestore';
+import {
+  Observable,
+  from,
+  switchMap,
+  catchError,
+  throwError,
+  firstValueFrom,
+} from 'rxjs';
+import {
+  User,
+  UserPreferences,
+  LoginCredentials,
+  RegisterPayload,
+  AuthResponse,
+  RegisterResponse,
 } from '@core/models';
 import { StorageService } from '@core/services/storage.service';
 
@@ -47,6 +74,7 @@ export class AuthService {
   private firestore = inject(Firestore);
   private router = inject(Router);
   private storage = inject(StorageService);
+  private injector = inject(EnvironmentInjector);
 
   private currentUser = signal<User | null>(null);
 
@@ -61,7 +89,7 @@ export class AuthService {
       return name
         .split(/\s+/)
         .filter(Boolean)
-        .map(n => n[0])
+        .map((n) => n[0])
         .join('')
         .toUpperCase()
         .slice(0, 2);
@@ -86,14 +114,24 @@ export class AuthService {
   }
 
   login(credentials: LoginCredentials): Observable<AuthResponse> {
-    const persistence = credentials.rememberMe ? browserLocalPersistence : browserSessionPersistence;
-    return from(setPersistence(this.auth, persistence).then(() =>
-      signInWithEmailAndPassword(this.auth, credentials.email, credentials.password)
-    )).pipe(
-      switchMap(async cred => {
+    const persistence = credentials.rememberMe
+      ? browserLocalPersistence
+      : browserSessionPersistence;
+    return from(
+      setPersistence(this.auth, persistence).then(() =>
+        signInWithEmailAndPassword(
+          this.auth,
+          credentials.email,
+          credentials.password,
+        ),
+      ),
+    ).pipe(
+      switchMap(async (cred) => {
         if (!cred.user.emailVerified) {
           await signOut(this.auth);
-          throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
+          throw new Error(
+            'Please verify your email before signing in. Check your inbox for the verification link.',
+          );
         }
         if (credentials.rememberMe) {
           this.storage.set(REMEMBERED_EMAIL_KEY, credentials.email);
@@ -105,7 +143,7 @@ export class AuthService {
         const token = await cred.user.getIdToken();
         return { token, expiresAt: '', user } as AuthResponse;
       }),
-      catchError(err => throwError(() => new Error(this.friendlyError(err)))),
+      catchError((err) => throwError(() => new Error(this.friendlyError(err)))),
     );
   }
 
@@ -114,45 +152,54 @@ export class AuthService {
   }
 
   register(payload: RegisterPayload): Observable<RegisterResponse> {
-    return from(createUserWithEmailAndPassword(this.auth, payload.email, payload.password)).pipe(
-      switchMap(async cred => {
-        await fbUpdateProfile(cred.user, { displayName: payload.name });
-        const profile: User = {
-          id: cred.user.uid,
-          email: payload.email,
-          name: payload.name,
-          avatar: '',
-          preferences: { ...DEFAULT_PREFS },
-        };
-        // Write profile while still authenticated, then sign out until email verified.
-        await setDoc(doc(this.firestore, `users/${cred.user.uid}`), profile);
-        await sendEmailVerification(cred.user);
-        await signOut(this.auth);
-        return {
-          message: `We've sent a verification email to ${payload.email}. Please verify your email to sign in.`,
-        } as RegisterResponse;
-      }),
-      catchError(err => throwError(() => new Error(this.friendlyError(err)))),
+    return from(
+      createUserWithEmailAndPassword(
+        this.auth,
+        payload.email,
+        payload.password,
+      ),
+    ).pipe(
+      switchMap((cred) =>
+        runInInjectionContext(this.injector, async () => {
+          await fbUpdateProfile(cred.user, { displayName: payload.name });
+          const profile: User = {
+            id: cred.user.uid,
+            email: payload.email,
+            name: payload.name,
+            avatar: '',
+            preferences: { ...DEFAULT_PREFS },
+          };
+          await setDoc(doc(this.firestore, `users/${cred.user.uid}`), profile);
+          await sendEmailVerification(cred.user);
+          await signOut(this.auth);
+          return {
+            message: `We've sent a verification email to ${payload.email}. Please verify your email to sign in.`,
+          } as RegisterResponse;
+        }),
+      ),
+      catchError((err) => throwError(() => new Error(this.friendlyError(err)))),
     );
   }
 
   resendVerificationEmail(email: string, password: string): Observable<void> {
     return from(signInWithEmailAndPassword(this.auth, email, password)).pipe(
-      switchMap(async cred => {
+      switchMap(async (cred) => {
         if (cred.user.emailVerified) {
           await signOut(this.auth);
-          throw new Error('Your email is already verified. You can sign in now.');
+          throw new Error(
+            'Your email is already verified. You can sign in now.',
+          );
         }
         await sendEmailVerification(cred.user);
         await signOut(this.auth);
       }),
-      catchError(err => throwError(() => new Error(this.friendlyError(err)))),
+      catchError((err) => throwError(() => new Error(this.friendlyError(err)))),
     );
   }
 
   sendPasswordReset(email: string): Observable<void> {
     return from(sendPasswordResetEmail(this.auth, email)).pipe(
-      catchError(err => throwError(() => new Error(this.friendlyError(err)))),
+      catchError((err) => throwError(() => new Error(this.friendlyError(err)))),
     );
   }
 
@@ -179,12 +226,19 @@ export class AuthService {
     if (updates.name && updates.name !== user.name) {
       await fbUpdateProfile(fbUser, { displayName: updates.name });
     }
-
-    await updateDoc(doc(this.firestore, `users/${user.id}`), { ...updates });
+    await runInInjectionContext(this.injector, () =>
+      updateDoc(doc(this.firestore, `users/${user.id}`), { ...updates }),
+    );
     this.currentUser.set({ ...user, ...updates });
   }
 
   private async loadOrCreateProfile(fbUser: FirebaseUser): Promise<User> {
+    return runInInjectionContext(this.injector, () =>
+      this.fetchOrCreateProfile(fbUser),
+    );
+  }
+
+  private async fetchOrCreateProfile(fbUser: FirebaseUser): Promise<User> {
     const ref = doc(this.firestore, `users/${fbUser.uid}`);
     const snap = await getDoc(ref);
     if (snap.exists()) {
@@ -210,7 +264,8 @@ export class AuthService {
 
   private friendlyError(err: unknown): string {
     const raw = err as { code?: string; message?: string };
-    if (raw?.code && AUTH_ERROR_MESSAGES[raw.code]) return AUTH_ERROR_MESSAGES[raw.code];
+    if (raw?.code && AUTH_ERROR_MESSAGES[raw.code])
+      return AUTH_ERROR_MESSAGES[raw.code];
     return raw?.message ?? 'Authentication failed';
   }
 }

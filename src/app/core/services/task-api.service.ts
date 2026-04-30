@@ -1,20 +1,42 @@
-import { Injectable, inject } from '@angular/core';
-import { Observable, from, throwError, defer } from 'rxjs';
+import {
+  Injectable,
+  inject,
+  EnvironmentInjector,
+  runInInjectionContext,
+} from '@angular/core';
+import { Observable, defer } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  Firestore, collection, doc, getDoc, getDocs, query, where, orderBy,
-  addDoc, updateDoc, deleteDoc, writeBatch, setDoc,
+  Firestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  deleteDoc,
+  writeBatch,
+  setDoc,
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import {
-  Task, CreateTaskPayload, UpdateTaskPayload,
-  TaskStatus, Subtask,
+  Task,
+  CreateTaskPayload,
+  UpdateTaskPayload,
+  TaskStatus,
+  Subtask,
 } from '@core/models';
 
 @Injectable({ providedIn: 'root' })
 export class TaskApiService {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
+  private injector = inject(EnvironmentInjector);
+
+  private run<T>(fn: () => Promise<T>): Observable<T> {
+    return defer(() => runInInjectionContext(this.injector, fn));
+  }
 
   private tasksCol() {
     const uid = this.requireUid();
@@ -33,14 +55,14 @@ export class TaskApiService {
   }
 
   getTasks(): Observable<Task[]> {
-    return defer(async () => {
+    return this.run(async () => {
       const snap = await getDocs(query(this.tasksCol(), orderBy('order')));
-      return snap.docs.map(d => ({ ...(d.data() as Task), id: d.id }));
+      return snap.docs.map((d) => ({ ...(d.data() as Task), id: d.id }));
     });
   }
 
   getTaskById(id: string): Observable<Task> {
-    return defer(async () => {
+    return this.run(async () => {
       const snap = await getDoc(this.taskDoc(id));
       if (!snap.exists()) throw new Error('Task not found');
       return { ...(snap.data() as Task), id: snap.id };
@@ -48,9 +70,14 @@ export class TaskApiService {
   }
 
   createTask(payload: CreateTaskPayload): Observable<Task> {
-    return defer(async () => {
-      const all = await getDocs(query(this.tasksCol(), where('status', '==', payload.status ?? 'todo')));
-      const maxOrder = all.docs.reduce((max, d) => Math.max(max, (d.data() as Task).order ?? -1), -1);
+    return this.run(async () => {
+      const all = await getDocs(
+        query(this.tasksCol(), where('status', '==', payload.status ?? 'todo')),
+      );
+      const maxOrder = all.docs.reduce(
+        (max, d) => Math.max(max, (d.data() as Task).order ?? -1),
+        -1,
+      );
       const now = new Date().toISOString();
       const id = uuidv4();
       const task: Task = {
@@ -61,20 +88,22 @@ export class TaskApiService {
         priority: payload.priority,
         dueDate: payload.dueDate,
         labels: payload.labels ?? [],
-        subtasks: (payload.subtasks ?? []).map(s => ({
+        subtasks: (payload.subtasks ?? []).map((s) => ({
           id: uuidv4(),
           title: s.title,
           completed: false,
         })),
         attachments: [],
-        activityLog: [{
-          id: uuidv4(),
-          taskId: id,
-          action: 'created',
-          details: 'Task created',
-          timestamp: now,
-          userId: this.requireUid(),
-        }],
+        activityLog: [
+          {
+            id: uuidv4(),
+            taskId: id,
+            action: 'created',
+            details: 'Task created',
+            timestamp: now,
+            userId: this.requireUid(),
+          },
+        ],
         projectId: payload.projectId,
         assigneeId: null,
         createdAt: now,
@@ -88,7 +117,7 @@ export class TaskApiService {
   }
 
   updateTask(id: string, payload: UpdateTaskPayload): Observable<Task> {
-    return defer(async () => {
+    return this.run(async () => {
       const snap = await getDoc(this.taskDoc(id));
       if (!snap.exists()) throw new Error('Task not found');
       const existing = snap.data() as Task;
@@ -96,10 +125,14 @@ export class TaskApiService {
       const now = new Date().toISOString();
       const changes: string[] = [];
       if (payload.status && payload.status !== existing.status) {
-        changes.push(`Status changed from "${existing.status}" to "${payload.status}"`);
+        changes.push(
+          `Status changed from "${existing.status}" to "${payload.status}"`,
+        );
       }
       if (payload.priority && payload.priority !== existing.priority) {
-        changes.push(`Priority changed from "${existing.priority}" to "${payload.priority}"`);
+        changes.push(
+          `Priority changed from "${existing.priority}" to "${payload.priority}"`,
+        );
       }
 
       const updated: Task = {
@@ -107,12 +140,15 @@ export class TaskApiService {
         ...payload,
         id,
         updatedAt: now,
-        completedAt: payload.status === 'done' && !existing.completedAt
-          ? now
-          : payload.status !== 'done' && payload.status !== undefined ? null : existing.completedAt,
+        completedAt:
+          payload.status === 'done' && !existing.completedAt
+            ? now
+            : payload.status !== 'done' && payload.status !== undefined
+              ? null
+              : existing.completedAt,
         activityLog: [
           ...existing.activityLog,
-          ...changes.map(detail => ({
+          ...changes.map((detail) => ({
             id: uuidv4(),
             taskId: id,
             action: 'updated',
@@ -128,11 +164,11 @@ export class TaskApiService {
   }
 
   deleteTask(id: string): Observable<void> {
-    return from(deleteDoc(this.taskDoc(id)));
+    return this.run(() => deleteDoc(this.taskDoc(id)));
   }
 
   deleteTasks(ids: string[]): Observable<void> {
-    return defer(async () => {
+    return this.run(async () => {
       const batch = writeBatch(this.firestore);
       for (const id of ids) {
         batch.delete(this.taskDoc(id));
@@ -141,8 +177,10 @@ export class TaskApiService {
     });
   }
 
-  reorderTasks(updates: { id: string; order: number; status?: TaskStatus }[]): Observable<Task[]> {
-    return defer(async () => {
+  reorderTasks(
+    updates: { id: string; order: number; status?: TaskStatus }[],
+  ): Observable<Task[]> {
+    return this.run(async () => {
       const now = new Date().toISOString();
       const uid = this.requireUid();
       const batch = writeBatch(this.firestore);
@@ -181,7 +219,7 @@ export class TaskApiService {
   }
 
   addSubtask(taskId: string, title: string): Observable<Task> {
-    return defer(async () => {
+    return this.run(async () => {
       const ref = this.taskDoc(taskId);
       const snap = await getDoc(ref);
       if (!snap.exists()) throw new Error('Task not found');
@@ -196,14 +234,14 @@ export class TaskApiService {
   }
 
   toggleSubtask(taskId: string, subtaskId: string): Observable<Task> {
-    return defer(async () => {
+    return this.run(async () => {
       const ref = this.taskDoc(taskId);
       const snap = await getDoc(ref);
       if (!snap.exists()) throw new Error('Task not found');
       const task = snap.data() as Task;
 
-      task.subtasks = task.subtasks.map(s =>
-        s.id === subtaskId ? { ...s, completed: !s.completed } : s
+      task.subtasks = task.subtasks.map((s) =>
+        s.id === subtaskId ? { ...s, completed: !s.completed } : s,
       );
       task.updatedAt = new Date().toISOString();
       await setDoc(ref, task);
@@ -212,13 +250,13 @@ export class TaskApiService {
   }
 
   removeSubtask(taskId: string, subtaskId: string): Observable<Task> {
-    return defer(async () => {
+    return this.run(async () => {
       const ref = this.taskDoc(taskId);
       const snap = await getDoc(ref);
       if (!snap.exists()) throw new Error('Task not found');
       const task = snap.data() as Task;
 
-      task.subtasks = task.subtasks.filter(s => s.id !== subtaskId);
+      task.subtasks = task.subtasks.filter((s) => s.id !== subtaskId);
       task.updatedAt = new Date().toISOString();
       await setDoc(ref, task);
       return task;

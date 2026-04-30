@@ -1,16 +1,36 @@
-import { Injectable, inject } from '@angular/core';
-import { Observable, from, defer } from 'rxjs';
+import {
+  Injectable,
+  inject,
+  EnvironmentInjector,
+  runInInjectionContext,
+} from '@angular/core';
+import { Observable, defer } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  Firestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc,
+  Firestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  deleteDoc,
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Project, CreateProjectPayload, UpdateProjectPayload } from '@core/models';
+import {
+  Project,
+  CreateProjectPayload,
+  UpdateProjectPayload,
+} from '@core/models';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectApiService {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
+  private injector = inject(EnvironmentInjector);
+
+  private run<T>(fn: () => Promise<T>): Observable<T> {
+    return defer(() => runInInjectionContext(this.injector, fn));
+  }
 
   private projectsCol() {
     return collection(this.firestore, `users/${this.requireUid()}/projects`);
@@ -27,14 +47,14 @@ export class ProjectApiService {
   }
 
   getProjects(): Observable<Project[]> {
-    return defer(async () => {
+    return this.run(async () => {
       const snap = await getDocs(this.projectsCol());
-      return snap.docs.map(d => ({ ...(d.data() as Project), id: d.id }));
+      return snap.docs.map((d) => ({ ...(d.data() as Project), id: d.id }));
     });
   }
 
   getProjectById(id: string): Observable<Project> {
-    return defer(async () => {
+    return this.run(async () => {
       const snap = await getDoc(this.projectDoc(id));
       if (!snap.exists()) throw new Error('Project not found');
       return { ...(snap.data() as Project), id: snap.id };
@@ -42,7 +62,7 @@ export class ProjectApiService {
   }
 
   createProject(payload: CreateProjectPayload): Observable<Project> {
-    return defer(async () => {
+    return this.run(async () => {
       const id = uuidv4();
       const now = new Date().toISOString();
       const project: Project = {
@@ -56,8 +76,11 @@ export class ProjectApiService {
     });
   }
 
-  updateProject(id: string, payload: UpdateProjectPayload): Observable<Project> {
-    return defer(async () => {
+  updateProject(
+    id: string,
+    payload: UpdateProjectPayload,
+  ): Observable<Project> {
+    return this.run(async () => {
       const snap = await getDoc(this.projectDoc(id));
       if (!snap.exists()) throw new Error('Project not found');
       const existing = snap.data() as Project;
@@ -73,6 +96,6 @@ export class ProjectApiService {
   }
 
   deleteProject(id: string): Observable<void> {
-    return from(deleteDoc(this.projectDoc(id)));
+    return this.run(() => deleteDoc(this.projectDoc(id)));
   }
 }
