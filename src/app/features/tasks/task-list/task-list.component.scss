@@ -1,4 +1,4 @@
-@use 'styles/mixins' as mixins;
+@use "styles/mixins" as mixins;
 
 :host {
   display: block;
@@ -51,11 +51,3 @@ app-custom-table {
     color: white;
   }
 }
-
-.fab-button {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 10;
-}
-

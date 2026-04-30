@@ -9,17 +9,6 @@
   @include mixins.page-container;
 }
 
-.kanban-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-
-.fab-button {
-  flex-shrink: 0;
-}
-
 .board {
   display: flex;
   gap: 16px;

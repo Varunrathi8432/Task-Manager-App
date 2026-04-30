@@ -1,13 +1,24 @@
 <div class="task-list-container page-container">
   <app-page-header
     title="Tasks"
-    [subtitle]="taskStore.totalCount() + ' total tasks, ' + taskStore.completedCount() + ' completed'">
+    [subtitle]="
+      taskStore.totalCount() +
+      ' total tasks, ' +
+      taskStore.completedCount() +
+      ' completed'
+    "
+  >
+    <button mat-flat-button color="primary" (click)="openTaskForm()">
+      <mat-icon>add</mat-icon>
+      New Task
+    </button>
   </app-page-header>
 
   <app-dynamic-filter
     [fieldsArray]="filterFields()"
     localStorageKey="tasks"
-    (whenFilterSubmit)="onFilterSubmit($event)">
+    (whenFilterSubmit)="onFilterSubmit($event)"
+  >
   </app-dynamic-filter>
 
   @if (selectedTasks().length > 0) {
@@ -25,12 +36,20 @@
       </button>
       <mat-menu #statusMenu="matMenu">
         <button mat-menu-item (click)="bulkStatusChange('todo')">To Do</button>
-        <button mat-menu-item (click)="bulkStatusChange('in-progress')">In Progress</button>
-        <button mat-menu-item (click)="bulkStatusChange('review')">Review</button>
+        <button mat-menu-item (click)="bulkStatusChange('in-progress')">
+          In Progress
+        </button>
+        <button mat-menu-item (click)="bulkStatusChange('review')">
+          Review
+        </button>
         <button mat-menu-item (click)="bulkStatusChange('done')">Done</button>
       </mat-menu>
 
-      <button mat-icon-button (click)="clearSelection()" matTooltip="Clear selection">
+      <button
+        mat-icon-button
+        (click)="clearSelection()"
+        matTooltip="Clear selection"
+      >
         <mat-icon>close</mat-icon>
       </button>
     </div>
@@ -47,15 +66,7 @@
     noDataMessage="No tasks found. Try adjusting filters or create a new task."
     (gridReady)="onGridReady($event)"
     (onRowSelect)="onRowSelect($event)"
-    (rowClicked)="onRowClicked($event)">
+    (rowClicked)="onRowClicked($event)"
+  >
   </app-custom-table>
-
-  <button
-    mat-fab
-    color="primary"
-    class="fab-button"
-    matTooltip="Create new task"
-    (click)="openTaskForm()">
-    <mat-icon>add</mat-icon>
-  </button>
 </div>

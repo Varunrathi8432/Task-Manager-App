@@ -1,11 +1,17 @@
 <div class="calendar-container">
-  <app-page-header title="Calendar" [subtitle]="subtitle()"></app-page-header>
+  <app-page-header title="Calendar" [subtitle]="subtitle()">
+    <button mat-flat-button color="primary" (click)="openTaskForm()">
+      <mat-icon>add</mat-icon>
+      New Task
+    </button>
+  </app-page-header>
 
   <app-dynamic-filter
     [fieldsArray]="filterFields()"
     [filterFormData]="filterFormData()"
     localStorageKey="calendar"
-    (whenFilterSubmit)="onFilterSubmit($event)">
+    (whenFilterSubmit)="onFilterSubmit($event)"
+  >
   </app-dynamic-filter>
 
   <div class="calendar-wrapper">

@@ -1,19 +1,15 @@
 <div class="kanban-container page-container">
-  <div class="kanban-header">
-    <app-page-header
-      title="Kanban Board"
-      [subtitle]="taskStore.totalCount() + ' tasks across ' + columns.length + ' columns'">
-    </app-page-header>
-
-    <button
-      mat-fab
-      color="primary"
-      class="fab-button"
-      matTooltip="Create new task"
-      (click)="openTaskForm()">
+  <app-page-header
+    title="Kanban Board"
+    [subtitle]="
+      taskStore.totalCount() + ' tasks across ' + columns.length + ' columns'
+    "
+  >
+    <button mat-flat-button color="primary" (click)="openTaskForm()">
       <mat-icon>add</mat-icon>
+      New Task
     </button>
-  </div>
+  </app-page-header>
 
   <div class="board">
     @for (column of columns; track column.status) {
@@ -27,7 +23,8 @@
             mat-icon-button
             class="add-btn"
             matTooltip="Add task to {{ column.label }}"
-            (click)="startAddingTask(column.status)">
+            (click)="startAddingTask(column.status)"
+          >
             <mat-icon>add</mat-icon>
           </button>
         </div>
@@ -39,8 +36,8 @@
           [id]="'column-' + column.status"
           [cdkDropListData]="getTasksForStatus(column.status)"
           [cdkDropListConnectedTo]="columnIds"
-          (cdkDropListDropped)="onDrop($event, column.status)">
-
+          (cdkDropListDropped)="onDrop($event, column.status)"
+        >
           @for (task of getTasksForStatus(column.status); track task.id) {
             <div
               class="kanban-card"
@@ -49,15 +46,17 @@
               [class.priority-high]="task.priority === 'high'"
               [class.priority-critical]="task.priority === 'critical'"
               cdkDrag
-              [cdkDragData]="task">
-
+              [cdkDragData]="task"
+            >
               <!-- Drag Preview -->
               <div class="drag-preview" *cdkDragPreview>
-                <div class="kanban-card"
-                     [class.priority-low]="task.priority === 'low'"
-                     [class.priority-medium]="task.priority === 'medium'"
-                     [class.priority-high]="task.priority === 'high'"
-                     [class.priority-critical]="task.priority === 'critical'">
+                <div
+                  class="kanban-card"
+                  [class.priority-low]="task.priority === 'low'"
+                  [class.priority-medium]="task.priority === 'medium'"
+                  [class.priority-high]="task.priority === 'high'"
+                  [class.priority-critical]="task.priority === 'critical'"
+                >
                   <div class="card-title">{{ task.title }}</div>
                 </div>
               </div>
@@ -76,13 +75,24 @@
                 }
 
                 @if (task.projectId) {
-                  <span class="card-project" matTooltip="{{ getProjectName(task.projectId) }}">
-                    <span class="project-dot" [style.background]="getProjectColor(task.projectId)"></span>
+                  <span
+                    class="card-project"
+                    matTooltip="{{ getProjectName(task.projectId) }}"
+                  >
+                    <span
+                      class="project-dot"
+                      [style.background]="getProjectColor(task.projectId)"
+                    ></span>
                   </span>
                 }
 
                 @if (getSubtaskProgress(task); as progress) {
-                  <span class="card-subtasks" matTooltip="Subtasks: {{ progress.completed }}/{{ progress.total }}">
+                  <span
+                    class="card-subtasks"
+                    matTooltip="Subtasks: {{ progress.completed }}/{{
+                      progress.total
+                    }}"
+                  >
                     <mat-icon class="meta-icon">checklist</mat-icon>
                     {{ progress.completed }}/{{ progress.total }}
                   </span>
@@ -110,15 +120,18 @@
               (ngModelChange)="newTaskTitle.set($event)"
               (keydown.enter)="submitNewTask(column.status)"
               (keydown.escape)="cancelAdding()"
-              #addInput>
+              #addInput
+            />
             <div class="inline-add-actions">
-              <button mat-flat-button color="primary" (click)="submitNewTask(column.status)"
-                      [disabled]="!newTaskTitle().trim()">
+              <button
+                mat-flat-button
+                color="primary"
+                (click)="submitNewTask(column.status)"
+                [disabled]="!newTaskTitle().trim()"
+              >
                 Add
               </button>
-              <button mat-button (click)="cancelAdding()">
-                Cancel
-              </button>
+              <button mat-button (click)="cancelAdding()">Cancel</button>
             </div>
           </div>
         }

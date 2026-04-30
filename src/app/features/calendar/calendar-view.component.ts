@@ -6,6 +6,8 @@ import {
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import {
   CalendarOptions,
@@ -53,7 +55,13 @@ const EMPTY_FILTER: CalendarFilterState = {
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [FullCalendarModule, PageHeaderComponent, DynamicFilterComponent],
+  imports: [
+    FullCalendarModule,
+    PageHeaderComponent,
+    DynamicFilterComponent,
+    MatButtonModule,
+    MatIconModule,
+  ],
   templateUrl: './calendar-view.component.html',
   styleUrl: './calendar-view.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -225,6 +233,16 @@ export class CalendarViewComponent {
     select: (arg: DateSelectArg) => this.onDateSelect(arg),
   }));
 
+  openTaskForm(dueDate?: Date): void {
+    const modalRef = this.modalService.show(TaskFormComponent, {
+      class: 'modal-md',
+      initialState: { task: null, ...(dueDate && { initialDueDate: dueDate }) },
+    });
+    modalRef.content?.result.pipe(take(1)).subscribe((result) => {
+      this.taskStore.addTask(result);
+    });
+  }
+
   onFilterSubmit(event: FilterSubmitEvent): void {
     this.filterFormData.set(event.filterFormData);
   }
@@ -267,12 +285,6 @@ export class CalendarViewComponent {
   }
 
   private onDateSelect(arg: DateSelectArg): void {
-    const modalRef = this.modalService.show(TaskFormComponent, {
-      class: 'modal-md',
-      initialState: { task: null, initialDueDate: arg.start },
-    });
-    modalRef.content?.result.pipe(take(1)).subscribe((result) => {
-      this.taskStore.addTask(result);
-    });
+    this.openTaskForm(arg.start);
   }
 }

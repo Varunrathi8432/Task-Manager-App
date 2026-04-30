@@ -1,4 +1,10 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  computed,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,7 +15,10 @@ import { take } from 'rxjs/operators';
 import { TaskStore } from '@store/task.store';
 import { ProjectStore } from '@store/project.store';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { CustomTableComponent } from '@shared/components/custom-table/custom-table.component';
 import type {
   CellActionEvent,
@@ -17,20 +26,37 @@ import type {
   ColumnConfig,
 } from '@shared/components/custom-table/custom-table.types';
 import { DynamicFilterComponent } from '@shared/components/dynamic-filter/dynamic-filter.component';
-import type { FilterField, FilterFormData, FilterSubmitEvent } from '@shared/components/dynamic-filter/dynamic-filter.types';
+import type {
+  FilterField,
+  FilterFormData,
+  FilterSubmitEvent,
+} from '@shared/components/dynamic-filter/dynamic-filter.types';
 import type { GridApi, ValueGetterParams } from 'ag-grid-community';
 import { TaskFormComponent } from '../task-form/task-form.component';
 import { Task, TaskStatus, TaskPriority } from '@core/models';
 import { ProjectCellComponent } from './cell-renderers/project-cell.component';
 
-const PRIORITY_ORDER: Record<TaskPriority, number> = { low: 0, medium: 1, high: 2, critical: 3 };
-const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, 'in-progress': 1, review: 2, done: 3 };
+const PRIORITY_ORDER: Record<TaskPriority, number> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+  critical: 3,
+};
+const STATUS_ORDER: Record<TaskStatus, number> = {
+  todo: 0,
+  'in-progress': 1,
+  review: 2,
+  done: 3,
+};
 
 @Component({
   selector: 'app-task-list',
   standalone: true,
   imports: [
-    MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    MatTooltipModule,
     CustomTableComponent,
     DynamicFilterComponent,
     PageHeaderComponent,
@@ -95,7 +121,9 @@ export class TaskListComponent implements CellActionHost<Task> {
       label: 'Project',
       field_type: 'dropdown',
       isMultiple: true,
-      items: this.projectStore.projects().map(p => ({ id: p.id, name: p.name, color: p.color })),
+      items: this.projectStore
+        .projects()
+        .map((p) => ({ id: p.id, name: p.name, color: p.color })),
       order: 4,
     },
     {
@@ -114,21 +142,28 @@ export class TaskListComponent implements CellActionHost<Task> {
     const statuses = (f['status'] as TaskStatus[]) ?? [];
     const priorities = (f['priority'] as TaskPriority[]) ?? [];
     const projects = (f['projectId'] as string[]) ?? [];
-    const dueRange = (f['dueDate'] as { start: string | null; end: string | null }) ?? { start: null, end: null };
+    const dueRange = (f['dueDate'] as {
+      start: string | null;
+      end: string | null;
+    }) ?? { start: null, end: null };
 
-    return tasks.filter(t => {
+    return tasks.filter((t) => {
       if (search) {
-        const hay = `${t.title} ${t.description} ${t.labels.join(' ')}`.toLowerCase();
+        const hay =
+          `${t.title} ${t.description} ${t.labels.join(' ')}`.toLowerCase();
         if (!hay.includes(search)) return false;
       }
       if (statuses.length && !statuses.includes(t.status)) return false;
       if (priorities.length && !priorities.includes(t.priority)) return false;
-      if (projects.length && (!t.projectId || !projects.includes(t.projectId))) return false;
+      if (projects.length && (!t.projectId || !projects.includes(t.projectId)))
+        return false;
       if (dueRange.start || dueRange.end) {
         if (!t.dueDate) return false;
         const due = new Date(t.dueDate).getTime();
-        if (dueRange.start && due < new Date(dueRange.start).getTime()) return false;
-        if (dueRange.end && due > new Date(dueRange.end).getTime() + 86_399_999) return false;
+        if (dueRange.start && due < new Date(dueRange.start).getTime())
+          return false;
+        if (dueRange.end && due > new Date(dueRange.end).getTime() + 86_399_999)
+          return false;
       }
       return true;
     });
@@ -147,14 +182,16 @@ export class TaskListComponent implements CellActionHost<Task> {
       field_value_name: 'priority',
       type: 'priority',
       width: 140,
-      comparator: (a, b) => PRIORITY_ORDER[a as TaskPriority] - PRIORITY_ORDER[b as TaskPriority],
+      comparator: (a, b) =>
+        PRIORITY_ORDER[a as TaskPriority] - PRIORITY_ORDER[b as TaskPriority],
     },
     {
       label: 'Status',
       field_value_name: 'status',
       type: 'status',
       width: 160,
-      comparator: (a, b) => STATUS_ORDER[a as TaskStatus] - STATUS_ORDER[b as TaskStatus],
+      comparator: (a, b) =>
+        STATUS_ORDER[a as TaskStatus] - STATUS_ORDER[b as TaskStatus],
     },
     {
       label: 'Due Date',
@@ -177,13 +214,16 @@ export class TaskListComponent implements CellActionHost<Task> {
       type: 'custom',
       cellRenderer: ProjectCellComponent,
       width: 180,
-      valueGetter: (p: ValueGetterParams<Task>) => this.getProjectName(p.data?.projectId ?? null),
+      valueGetter: (p: ValueGetterParams<Task>) =>
+        this.getProjectName(p.data?.projectId ?? null),
     },
   ];
 
   getProjectName(projectId: string | null): string {
     if (!projectId) return '—';
-    return this.projectStore.projects().find(p => p.id === projectId)?.name ?? '—';
+    return (
+      this.projectStore.projects().find((p) => p.id === projectId)?.name ?? '—'
+    );
   }
 
   onGridReady(api: GridApi<Task>): void {
@@ -225,7 +265,7 @@ export class TaskListComponent implements CellActionHost<Task> {
       class: 'modal-md',
       initialState: { task: task ?? null },
     });
-    modalRef.content?.result.pipe(take(1)).subscribe(result => {
+    modalRef.content?.result.pipe(take(1)).subscribe((result) => {
       if (task) {
         this.taskStore.updateTask({ id: task.id, changes: result });
       } else {
@@ -248,7 +288,7 @@ export class TaskListComponent implements CellActionHost<Task> {
         warn: true,
       } satisfies ConfirmDialogData,
     });
-    modalRef.content?.result.pipe(take(1)).subscribe(confirmed => {
+    modalRef.content?.result.pipe(take(1)).subscribe((confirmed) => {
       if (confirmed) this.taskStore.deleteTask(task.id);
     });
   }
@@ -266,9 +306,9 @@ export class TaskListComponent implements CellActionHost<Task> {
         warn: true,
       } satisfies ConfirmDialogData,
     });
-    modalRef.content?.result.pipe(take(1)).subscribe(confirmed => {
+    modalRef.content?.result.pipe(take(1)).subscribe((confirmed) => {
       if (confirmed) {
-        this.taskStore.deleteTasks(selected.map(t => t.id));
+        this.taskStore.deleteTasks(selected.map((t) => t.id));
         this.clearSelection();
       }
     });
